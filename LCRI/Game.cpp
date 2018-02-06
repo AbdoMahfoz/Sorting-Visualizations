@@ -3,27 +3,43 @@
 RectangleShape s;
 RectangleShape x;
 bool ReverseX = false, ReverseY = false;
-bool IReverseX = false, IReverseY = false;
+bool IReverseX = true, IReverseY = true;
 
 void Animate()
 {
-	x.move(16.0f + (-32.0f * IReverseX), 16.0f + (-32.0f * IReverseY));
-	if (x.getPosition().x >= SCREEN_WIDTH - 50 || x.getPosition().x <= 50)
+	x.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseX), 256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseY));
+	s.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseX), 256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseY));
+	if (x.getPosition().x >= SCREEN_WIDTH - 50)
 	{
-		IReverseX = !IReverseX;
+		IReverseX = true;
 	}
-	if (x.getPosition().y >= SCREEN_HEIGHT - 50 || x.getPosition().y <= 50)
+	else if (x.getPosition().x <= 50)
 	{
-		IReverseY = !IReverseY;
+		IReverseX = false;
 	}
-	s.move(16.0f + (-32.0f * ReverseX), 16.0f + (-32.0f * ReverseY));
-	if (s.getPosition().x >= SCREEN_WIDTH - 50 || s.getPosition().x <= 50)
+	if (x.getPosition().y >= SCREEN_HEIGHT - 50)
 	{
-		ReverseX = !ReverseX;
+		IReverseY = true;
 	}
-	if (s.getPosition().y >= SCREEN_HEIGHT - 50 || s.getPosition().y <= 50)
+	else if (x.getPosition().y <= 50)
 	{
-		ReverseY = !ReverseY;
+		IReverseY = false;
+	}
+	if (s.getPosition().x >= SCREEN_WIDTH - 50)
+	{
+		ReverseX = true;
+	}
+	else if (s.getPosition().x <= 50)
+	{
+		ReverseX = false;
+	}
+	if (s.getPosition().y >= SCREEN_HEIGHT - 50)
+	{
+		ReverseY = true;
+	}
+	else if (s.getPosition().y <= 50)
+	{
+		ReverseY = false;
 	}
 }
 
