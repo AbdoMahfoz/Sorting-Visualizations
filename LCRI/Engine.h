@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600

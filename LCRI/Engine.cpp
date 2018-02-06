@@ -17,7 +17,7 @@ void Engine::Main()
 		{
 			switch (event.type)
 			{
-			//Window Closed Event
+				//Window Closed Event
 			case Event::Closed:
 				Log("Closed event triggered");
 				MainWindow->close();
@@ -59,7 +59,20 @@ void Engine::RoutineManager()
 
 void Engine::Log(std::string s)
 {
+	static bool First = true;
 	std::cout << "[" << ElapsedTime << "] " << s << '\n';
+	std::ofstream out;
+	if (First)
+	{
+		out.open("log.txt");
+		First = false;
+	}
+	else
+	{
+		out.open("log.txt", std::ios::app);
+	}
+	out << "[" << ElapsedTime << "] " << s << '\n';
+	out.close();
 }
 
 Engine::Engine(void (Engine::**MainPtr)())
@@ -68,7 +81,7 @@ Engine::Engine(void (Engine::**MainPtr)())
 	ElapsedTime = 0;
 	DeltaTime = 0;
 	//Intialization of window
-	#pragma region Logging
+#pragma region Logging
 	ss << "Intializing window : Width = " << SCREEN_WIDTH << ", Height = " << SCREEN_HEIGHT << ", Title = " << TITLE;
 	Log(ss.str());
 	ss.str("");
@@ -89,22 +102,22 @@ float Engine::GetDeltaTime()
 
 void Engine::RegisterObject(int Layer, Drawable* Object)
 {
-	#pragma region Logging
+#pragma region Logging
 	ss << "Registering object in address " << Object << " into layer " << Layer;
 	Log(ss.str());
 	ss.str("");
-	#pragma endregion
+#pragma endregion
 	//Registering object into specified layer
 	Objects[Layer].push_back(Object);
 }
 
 void Engine::UnRegisterObject(int Layer, Drawable* Object)
 {
-	#pragma region Logging
+#pragma region Logging
 	ss << "Attempting to remove object " << Object << " from layer " << Layer;
 	Log(ss.str());
 	ss.str("");
-	#pragma endregion
+#pragma endregion
 	//Removing the object from the layer in which it resides
 	for (unsigned int i = 0; i < Objects[Layer].size(); i++)
 	{
@@ -120,22 +133,22 @@ void Engine::UnRegisterObject(int Layer, Drawable* Object)
 
 void Engine::RegisterRoutine(void(*routine)())
 {
-	#pragma region
+#pragma region
 	ss << "Registering routine " << routine;
 	Log(ss.str());
 	ss.str("");
-	#pragma endregion
+#pragma endregion
 	//Registering routine
 	Routines.push_back(routine);
 }
 
 void Engine::UnRegisterRoutine(void(*routine)())
 {
-	#pragma region Logging
+#pragma region Logging
 	ss << "Attempting to find and unregister routine " << routine;
 	Log(ss.str());
 	ss.str("");
-	#pragma endregion
+#pragma endregion
 	//Removing the routine from the vector
 	for (unsigned int i = 0; i < Routines.size(); i++)
 	{
