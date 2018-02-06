@@ -38,6 +38,7 @@ private:
 	//routines are functions that the engine run every frame
 	std::vector < void(*)() > Routines;
 
+	//Duumy stringstream for any purpose
 	std::stringstream ss;
 
 	//The rendering function
@@ -71,7 +72,7 @@ public:
 	~Engine();
 };
 
-//Protoype to the Start function awaiting to be defined by Game.cpp
+//Called once at the beginning of the game
 void Start();
-//A Global pointer to be accessed by any source file that includes this header
+//A Global pointer to be accessed by any source file that includes Engine.h
 extern Engine *engine;
