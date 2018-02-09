@@ -57,24 +57,6 @@ void Engine::RoutineManager()
 	}
 }
 
-void Engine::Log(std::string s)
-{
-	static bool First = true;
-	std::cout << "[" << ElapsedTime << "] " << s << '\n';
-	std::ofstream out;
-	if (First)
-	{
-		out.open("log.txt");
-		First = false;
-	}
-	else
-	{
-		out.open("log.txt", std::ios::app);
-	}
-	out << "[" << ElapsedTime << "] " << s << '\n';
-	out.close();
-}
-
 Engine::Engine(void (Engine::**MainPtr)())
 {
 	//Setting initaial values
@@ -93,6 +75,24 @@ Engine::Engine(void (Engine::**MainPtr)())
 	//Assiging pointer to main function so that it can call it later
 	//Note that this is the only way the main function can be called from outside of the class
 	*MainPtr = &Engine::Main;
+}
+
+void Engine::Log(std::string s)
+{
+	static bool First = true;
+	std::cout << "[" << ElapsedTime << "] " << s << '\n';
+	std::ofstream out;
+	if (First)
+	{
+		out.open("log.txt");
+		First = false;
+	}
+	else
+	{
+		out.open("log.txt", std::ios::app);
+	}
+	out << "[" << ElapsedTime << "] " << s << '\n';
+	out.close();
 }
 
 float Engine::GetDeltaTime()

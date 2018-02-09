@@ -39,20 +39,20 @@ private:
 	//routines are functions that the engine run every frame
 	std::vector < void(*)() > Routines;
 
-	//Dummy stringstream for logging purpose
-	std::stringstream ss;
-
 	//The rendering function
 	void Render();
 
 	//The functions that manage running routines sequentially
 	void RoutineManager();
+public:
+	//Dummy stringstream for logging purpose
+	std::stringstream ss;
+
+	//Default constructor
+	Engine(void (Engine::**MainPtr)());
 
 	//function used for logging
 	void Log(std::string s);
-public:
-	//Default constructor
-	Engine(void (Engine::**MainPtr)());
 
 	//Function for reading deltatime because it is a read only variable
 	float GetDeltaTime();
