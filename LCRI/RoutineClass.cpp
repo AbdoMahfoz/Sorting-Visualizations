@@ -56,4 +56,5 @@ RoutineClass::~RoutineClass()
 			return;
 		}
 	}
+	engine->Log("[Error]Object not found");
 }
