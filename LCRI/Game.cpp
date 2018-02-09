@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "RoutineClass.h"
 
 RectangleShape s;
 RectangleShape x;
@@ -10,9 +11,9 @@ void Animate()
 	//Moving objects based on their respective booleans
 	//Each boolean decides the direction in which the object will slide
 	x.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseX),
-		   256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseY));
+		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseY));
 	s.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseX),
-		   256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseY));
+		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseY));
 	//A series of if condition to check if our object hit the boarder of the window
 	if (x.getPosition().x >= SCREEN_WIDTH - 50)
 	{

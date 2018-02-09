@@ -39,7 +39,7 @@ private:
 	//routines are functions that the engine run every frame
 	std::vector < void(*)() > Routines;
 
-	//Duumy stringstream for any purpose
+	//Dummy stringstream for logging purpose
 	std::stringstream ss;
 
 	//The rendering function
