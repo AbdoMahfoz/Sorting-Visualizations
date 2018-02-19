@@ -68,7 +68,7 @@ Engine::Engine(void (Engine::**MainPtr)())
 	Log(ss.str());
 	ss.str("");
 	#pragma endregion
-	MainWindow = new RenderWindow(VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), TITLE);
+	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
 	//Activating Vsync
 	Log("Enabling Vsync");
 	MainWindow->setVerticalSyncEnabled(true);
@@ -79,6 +79,7 @@ Engine::Engine(void (Engine::**MainPtr)())
 
 void Engine::Log(std::string s)
 {
+	/*
 	static bool First = true;
 	std::cout << "[" << ElapsedTime << "] " << s << '\n';
 	std::ofstream out;
@@ -93,6 +94,7 @@ void Engine::Log(std::string s)
 	}
 	out << "[" << ElapsedTime << "] " << s << '\n';
 	out.close();
+	*/
 }
 
 float Engine::GetDeltaTime()

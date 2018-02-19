@@ -1,68 +1,115 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-RectangleShape s;
-RectangleShape x;
-bool ReverseX = false, ReverseY = false;
-bool IReverseX = true, IReverseY = true;
+const int Size = 100;
+int RandomizeRate = 0;
 
-void Animate()
+std::vector < int > Arr;
+RectangleShape* rects;
+int Min = Size, Max = -1;
+float ElapsedTime = 0;
+
+void DrawArray()
 {
-	//Moving objects based on their respective booleans
-	//Each boolean decides the direction in which the object will slide
-	x.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseX),
-		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseY));
-	s.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseX),
-		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseY));
-	//A series of if condition to check if our object hit the boarder of the window
-	if (x.getPosition().x >= SCREEN_WIDTH - 50)
+	int MaxRectHeight = VideoMode::getDesktopMode().height;
+	for (int i = 0; i < Arr.size(); i++)
 	{
-		IReverseX = true;
+		float x = (float)(Arr[i] - Min) / (Max - Min);
+		rects[i].setSize(Vector2f(rects[i].getSize().x, x * MaxRectHeight * -1));
 	}
-	else if (x.getPosition().x <= 50)
+}
+
+void Randomize()
+{
+	if (RandomizeRate == 0)
 	{
-		IReverseX = false;
+		ElapsedTime = 0;
+		return;
 	}
-	if (x.getPosition().y >= SCREEN_HEIGHT - 50)
+	ElapsedTime += engine->GetDeltaTime();
+	if (ElapsedTime > 1.0f / RandomizeRate)
 	{
-		IReverseY = true;
+		ElapsedTime = 0;
+		Min = Size;
+		Max = -1;
+		for (int i = 0; i < Arr.size(); i++)
+		{
+			Arr[i] = rand() % Size;
+			Min = std::min(Min, Arr[i]);
+			Max = std::max(Max, Arr[i]);
+		}
 	}
-	else if (x.getPosition().y <= 50)
+}
+
+void Sort()
+{
+	for (int i = 0; i < Arr.size(); i++)
 	{
-		IReverseY = false;
+		Arr[i] = i;
 	}
-	if (s.getPosition().x >= SCREEN_WIDTH - 50)
+	Min = -1;
+	Max = Arr.size();
+}
+
+void CaptureClick()
+{
+	static bool flag = true;
+	if (Keyboard::isKeyPressed(Keyboard::Key::Right))
 	{
-		ReverseX = true;
+		if (flag)
+		{
+			RandomizeRate++;
+		}
+		flag = false;
 	}
-	else if (s.getPosition().x <= 50)
+	else if (Keyboard::isKeyPressed(Keyboard::Key::Left))
 	{
-		ReverseX = false;
+		if (flag)
+		{
+			RandomizeRate = std::max(0, RandomizeRate - 1);
+		}
+		flag = false;
 	}
-	if (s.getPosition().y >= SCREEN_HEIGHT - 50)
+	else if (Keyboard::isKeyPressed(Keyboard::Key::Space))
 	{
-		ReverseY = true;
+		if (flag)
+		{
+			RandomizeRate = 0;
+		}
+		flag = false;
 	}
-	else if (s.getPosition().y <= 50)
+	else if (Keyboard::isKeyPressed(Keyboard::Key::Return))
 	{
-		ReverseY = false;
+		if (flag)
+		{
+			RandomizeRate = 0;
+			Sort();
+		}
+		flag = false;
+	}
+	else
+	{
+		flag = true;
 	}
 }
 
 void Start()
 {
-	//Setting values for rectangle s
-	s.setFillColor(Color::Green);
-	s.setPosition(150, 150);
-	s.setSize(Vector2f(100, 100));
-	s.setOrigin(Vector2f(50, 50));
-	//Setting values for rectangle x
-	x.setFillColor(Color::Magenta);
-	x.setPosition(500, 150);
-	x.setSize(Vector2f(100, 100));
-	x.setOrigin(Vector2f(50, 50));
-	//Registering objects and Animation routine
-	engine->RegisterObject(0, &s);
-	engine->RegisterRoutine(Animate);
-	engine->RegisterObject(0, &x);
+	Arr.resize(Size);
+	rects = new RectangleShape[Arr.size()];
+	float RectWidth = (float)VideoMode::getDesktopMode().width / Arr.size();
+	for (int i = 0; i < Size; i++)
+	{
+		Arr[i] = rand() % Size;
+		Min = std::min(Min, Arr[i]);
+		Max = std::max(Max, Arr[i]);
+		rects[i].setSize(Vector2f(RectWidth / 1.09, 1.0f));
+		rects[i].setPosition(Vector2f((RectWidth * i), VideoMode::getDesktopMode().height));
+		engine->RegisterObject(0, &rects[i]);
+	}
+	Min--;
+	Max++;
+	engine->RegisterRoutine(DrawArray);
+	engine->RegisterRoutine(Randomize);
+	engine->RegisterRoutine(CaptureClick);
 }
