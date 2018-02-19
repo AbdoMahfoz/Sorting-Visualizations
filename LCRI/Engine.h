@@ -48,6 +48,8 @@ public:
 	//Dummy stringstream for logging purpose
 	std::stringstream ss;
 
+	RenderWindow* GetWindow();
+
 	//Default constructor
 	Engine(void (Engine::**MainPtr)());
 

@@ -1,22 +1,28 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-const int Size = 100;
-int RandomizeRate = 0;
+const int Size = 100000;
+int RandomizeRate = 60;
 
 std::vector < int > Arr;
-RectangleShape* rects;
+RectangleShape rect;
 int Min = Size, Max = -1;
 float ElapsedTime = 0;
+float RectWidth = (float)VideoMode::getDesktopMode().width / Size;
+RenderWindow* MainWindow;
 
 void DrawArray()
 {
-	int MaxRectHeight = VideoMode::getDesktopMode().height;
-	for (int i = 0; i < Arr.size(); i++)
+	float RectHeight = (float)VideoMode::getDesktopMode().height;
+	MainWindow->clear();
+	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		float x = (float)(Arr[i] - Min) / (Max - Min);
-		rects[i].setSize(Vector2f(rects[i].getSize().x, x * MaxRectHeight * -1));
+		rect.setSize(Vector2f(RectWidth / 1.09f, x * RectHeight * -1));
+		rect.setPosition(Vector2f(RectWidth * i, RectHeight));
+		MainWindow->draw(rect);
 	}
+	MainWindow->display();
 }
 
 void Randomize()
@@ -32,7 +38,7 @@ void Randomize()
 		ElapsedTime = 0;
 		Min = Size;
 		Max = -1;
-		for (int i = 0; i < Arr.size(); i++)
+		for (unsigned int i = 0; i < Arr.size(); i++)
 		{
 			Arr[i] = rand() % Size;
 			Min = std::min(Min, Arr[i]);
@@ -43,7 +49,7 @@ void Randomize()
 
 void Sort()
 {
-	for (int i = 0; i < Arr.size(); i++)
+	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		Arr[i] = i;
 	}
@@ -95,17 +101,13 @@ void CaptureClick()
 
 void Start()
 {
+	MainWindow = engine->GetWindow();
 	Arr.resize(Size);
-	rects = new RectangleShape[Arr.size()];
-	float RectWidth = (float)VideoMode::getDesktopMode().width / Arr.size();
-	for (int i = 0; i < Size; i++)
+	for (unsigned int i = 0; i < Size; i++)
 	{
 		Arr[i] = rand() % Size;
 		Min = std::min(Min, Arr[i]);
 		Max = std::max(Max, Arr[i]);
-		rects[i].setSize(Vector2f(RectWidth / 1.09, 1.0f));
-		rects[i].setPosition(Vector2f((RectWidth * i), VideoMode::getDesktopMode().height));
-		engine->RegisterObject(0, &rects[i]);
 	}
 	Min--;
 	Max++;
