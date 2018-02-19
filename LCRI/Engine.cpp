@@ -27,7 +27,7 @@ void Engine::Main()
 		//Logic
 		RoutineManager();
 		//Rendering
-		//Render();
+		Render();
 	}
 }
 
@@ -55,11 +55,6 @@ void Engine::RoutineManager()
 	{
 		Routines[i]();
 	}
-}
-
-RenderWindow* Engine::GetWindow()
-{
-	return MainWindow;
 }
 
 Engine::Engine(void (Engine::**MainPtr)())
@@ -109,13 +104,11 @@ float Engine::GetDeltaTime()
 
 void Engine::RegisterObject(int Layer, Drawable* Object)
 {
-	/*
 #pragma region Logging
 	ss << "Registering object in address " << Object << " into layer " << Layer;
 	Log(ss.str());
 	ss.str("");
 #pragma endregion
-	*/
 	//Registering object into specified layer
 	Objects[Layer].push_back(Object);
 }
