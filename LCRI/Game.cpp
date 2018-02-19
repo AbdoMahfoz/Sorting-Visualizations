@@ -12,7 +12,7 @@ float ElapsedTime = 0;
 void DrawArray()
 {
 	int MaxRectHeight = VideoMode::getDesktopMode().height;
-	for (int i = 0; i < Arr.size(); i++)
+	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		float x = (float)(Arr[i] - Min) / (Max - Min);
 		rects[i].setSize(Vector2f(rects[i].getSize().x, x * MaxRectHeight * -1));
@@ -32,7 +32,7 @@ void Randomize()
 		ElapsedTime = 0;
 		Min = Size;
 		Max = -1;
-		for (int i = 0; i < Arr.size(); i++)
+		for (unsigned int i = 0; i < Arr.size(); i++)
 		{
 			Arr[i] = rand() % Size;
 			Min = std::min(Min, Arr[i]);
@@ -43,7 +43,7 @@ void Randomize()
 
 void Sort()
 {
-	for (int i = 0; i < Arr.size(); i++)
+	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		Arr[i] = i;
 	}
@@ -103,8 +103,8 @@ void Start()
 		Arr[i] = rand() % Size;
 		Min = std::min(Min, Arr[i]);
 		Max = std::max(Max, Arr[i]);
-		rects[i].setSize(Vector2f(RectWidth / 1.09, 1.0f));
-		rects[i].setPosition(Vector2f((RectWidth * i), VideoMode::getDesktopMode().height));
+		rects[i].setSize(Vector2f(RectWidth / 1.09f, 1.0f));
+		rects[i].setPosition(Vector2f((RectWidth * i), (float)VideoMode::getDesktopMode().height));
 		engine->RegisterObject(0, &rects[i]);
 	}
 	Min--;
