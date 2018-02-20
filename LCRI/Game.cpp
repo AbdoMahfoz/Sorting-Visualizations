@@ -1,8 +1,11 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-const int Size = 100;
+const int Size = 1366;
+const int Height = 768;
+const int Width = 1366;
 int RandomizeRate = 0;
+int xoffset = 0, yoffset = 0;
 
 std::vector < int > Arr;
 RectangleShape* rects;
@@ -11,11 +14,10 @@ float ElapsedTime = 0;
 
 void DrawArray()
 {
-	int MaxRectHeight = VideoMode::getDesktopMode().height;
 	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		float x = (float)(Arr[i] - Min) / (Max - Min);
-		rects[i].setSize(Vector2f(rects[i].getSize().x, x * MaxRectHeight * -1));
+		rects[i].setSize(Vector2f(rects[i].getSize().x, x * Height * -1));
 	}
 }
 
@@ -38,6 +40,8 @@ void Randomize()
 			Min = std::min(Min, Arr[i]);
 			Max = std::max(Max, Arr[i]);
 		}
+		Min--;
+		Max++;
 	}
 }
 
@@ -97,14 +101,14 @@ void Start()
 {
 	Arr.resize(Size);
 	rects = new RectangleShape[Arr.size()];
-	float RectWidth = (float)VideoMode::getDesktopMode().width / Arr.size();
+	float RectWidth = (float)Width / Arr.size();
 	for (int i = 0; i < Size; i++)
 	{
 		Arr[i] = rand() % Size;
 		Min = std::min(Min, Arr[i]);
 		Max = std::max(Max, Arr[i]);
 		rects[i].setSize(Vector2f(RectWidth / 1.09f, 1.0f));
-		rects[i].setPosition(Vector2f((RectWidth * i), (float)VideoMode::getDesktopMode().height));
+		rects[i].setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
 		engine->RegisterObject(0, &rects[i]);
 	}
 	Min--;
