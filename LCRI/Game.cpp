@@ -4,31 +4,34 @@
 const int Size = 100;
 const int Height = 768;
 const int Width = 1366;
-int RandomizeRate = 0;
 int xoffset = 0, yoffset = 0;
 
 std::vector < int > Arr;
 RectangleShape* rects;
 RenderWindow* MainWindow;
+Font f;
+Text t;
 int Min = Size, Max = -1;
 float ElapsedTime = 0;
 int a = -1, b = -1;
+int ms = 5;
+bool InProgress = false;
+std::mutex m;
 
 void DrawArray()
 {
-	Event event;
-	while (MainWindow->pollEvent(event))
+	if (InProgress)
 	{
-		switch (event.type)
-		{
-			//Window Closed Event
-		case Event::Closed:
-			MainWindow->close();
-			exit(0);
-			break;
-		}
+		ElapsedTime += engine->GetDeltaTime();
+		engine->ss << "Elapsed time = " << ElapsedTime << "s\t";
 	}
-	MainWindow->clear();
+	else
+	{
+		ElapsedTime = 0;
+	}
+	engine->ss << "Step time = " <<  ms << "ms";
+	t.setString(engine->ss.str());
+	engine->ss.str("");
 	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		float x = (float)(Arr[i] - Min) / (Max - Min);
@@ -45,45 +48,40 @@ void DrawArray()
 		{
 			rects[i].setFillColor(Color::White);
 		}
-		MainWindow->draw(rects[i]);
 	}
-	MainWindow->display();
 }
 
 void Randomize()
 {
-	if (RandomizeRate == 0)
+	Min = Size;
+	Max = -1;
+	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
-		ElapsedTime = 0;
-		return;
+		Arr[i] = rand() % Size;
+		Min = std::min(Min, Arr[i]);
+		Max = std::max(Max, Arr[i]);
 	}
-	ElapsedTime += engine->GetDeltaTime();
-	if (ElapsedTime > 1.0f / RandomizeRate)
-	{
-		ElapsedTime = 0;
-		Min = Size;
-		Max = -1;
-		for (unsigned int i = 0; i < Arr.size(); i++)
-		{
-			Arr[i] = rand() % Size;
-			Min = std::min(Min, Arr[i]);
-			Max = std::max(Max, Arr[i]);
-		}
-		Min--;
-		Max++;
-	}
+	Min--;
+	Max++;
 }
 
 void Sort()
 {
+	std::lock_guard<std::mutex> lg(m);
+	InProgress = true;
 	for (int i = 0; i < Arr.size(); i++)
 	{
 		int min, temp;
 		min = i;
 		for (int j = i + 1; j < Arr.size(); j++)
 		{
-			DrawArray();
-			sleep(milliseconds(2));
+			if (!InProgress)
+			{
+				a = -1;
+				b = -1;
+				return;
+			}
+			sleep(milliseconds(ms));
 			a = j;
 			b = min;
 			if (Arr[j] < Arr[min])
@@ -95,6 +93,7 @@ void Sort()
 		Arr[min] = Arr[i];
 		Arr[i] = temp;
 	}
+	InProgress = false;
 	a = -1;
 	b = -1;
 }
@@ -106,7 +105,7 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			RandomizeRate++;
+			ms = std::max(0, ms - 1);
 		}
 		flag = false;
 	}
@@ -114,7 +113,7 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			RandomizeRate = std::max(0, RandomizeRate - 1);
+			ms++;
 		}
 		flag = false;
 	}
@@ -122,7 +121,8 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			RandomizeRate = 0;
+			InProgress = false;
+			Randomize();
 		}
 		flag = false;
 	}
@@ -130,8 +130,17 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			RandomizeRate = 0;
-			Sort();
+			if (InProgress)
+			{
+				InProgress = false;
+				m.lock();
+				m.unlock();
+			}
+			else
+			{
+				std::thread t(Sort);
+				t.detach();
+			}
 		}
 		flag = false;
 	}
@@ -143,6 +152,11 @@ void CaptureClick()
 
 void Start()
 {
+	f.loadFromFile("arial.ttf");
+	t.setFont(f);
+	t.setPosition(Vector2f(0.0f, 0.0f));
+	t.setCharacterSize(15);
+	t.setColor(Color::Green);
 	Arr.resize(Size);
 	MainWindow = engine->GetWindow();
 	rects = new RectangleShape[Arr.size()];
@@ -158,7 +172,7 @@ void Start()
 	}
 	Min--;
 	Max++;
+	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(DrawArray);
-	engine->RegisterRoutine(Randomize);
 	engine->RegisterRoutine(CaptureClick);
 }

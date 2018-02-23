@@ -27,7 +27,7 @@ void Engine::Main()
 		//Logic
 		RoutineManager();
 		//Rendering
-		//Render();
+		Render();
 	}
 }
 

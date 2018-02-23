@@ -4,6 +4,9 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <thread>
+#include <mutex>
+#include <Windows.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
