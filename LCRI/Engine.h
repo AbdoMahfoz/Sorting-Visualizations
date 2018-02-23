@@ -42,6 +42,8 @@ private:
 	//routines are functions that the engine run every frame
 	std::vector < void(*)() > Routines;
 
+	std::vector < void(*)() > Close;
+
 	//The rendering function
 	void Render();
 
@@ -73,6 +75,8 @@ public:
 
 	//Function for deregistering previosuly registered routine to stop LogicManager from invoking it
 	void UnRegisterRoutine(void(*routine)());
+
+	void RegisterOnClose(void(*routine)());
 
 	//Default Deconstructor for deallocating pointers
 	~Engine();

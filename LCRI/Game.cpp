@@ -2,8 +2,9 @@
 #include "RoutineClass.h"
 
 const int Size = 100;
-const int Height = 768;
-const int Width = 1366;
+const int BufferLimit = 100;
+int Height = VideoMode::getDesktopMode().height;
+int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
 
 std::vector < int > Arr;
@@ -13,89 +14,111 @@ Font f;
 Text t;
 int Min = Size, Max = -1;
 float ElapsedTime = 0;
-int a = -1, b = -1;
+std::vector< std::pair< std::pair<int, int >, int > > Buffer;
+std::vector< std::pair< std::pair<int, int >, int > > TempBuffer;
+std::vector < std::pair < int, int > > SwapBuffer;
 int ms = 5;
 bool InProgress = false;
-std::mutex m;
+std::mutex m, buf, sbuf;
 
 void DrawArray()
 {
 	if (InProgress)
 	{
 		ElapsedTime += engine->GetDeltaTime();
-		engine->ss << "Elapsed time = " << ElapsedTime << "s\t";
 	}
 	else
 	{
-		ElapsedTime = 0;
+		TempBuffer.clear();
 	}
-	engine->ss << "Step time = " <<  ms << "ms";
+	engine->ss << "Elapsed time = " << ElapsedTime << "s\t" << "Step time = " << ms << "ms";
 	t.setString(engine->ss.str());
 	engine->ss.str("");
 	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
-		float x = (float)(Arr[i] - Min) / (Max - Min);
-		rects[i].setSize(Vector2f(rects[i].getSize().x, x * Height * -1));
-		if (i == a)
+		if (!InProgress)
 		{
-			rects[i].setFillColor(Color::Red);
+			float x = (float)(Arr[i] - Min) / (Max - Min);
+			rects[i].setSize(Vector2f(rects[i].getSize().x, x * Height * -1));
 		}
-		else if (i == b)
-		{
-			rects[i].setFillColor(Color::Blue);
-		}
-		else
-		{
-			rects[i].setFillColor(Color::White);
-		}
+		rects[i].setFillColor(Color::White);
 	}
-}
-
-void Randomize()
-{
-	Min = Size;
-	Max = -1;
-	for (unsigned int i = 0; i < Arr.size(); i++)
+	sbuf.lock();
+	for (unsigned int i = 0; i < SwapBuffer.size(); i++)
 	{
-		Arr[i] = rand() % Size;
-		Min = std::min(Min, Arr[i]);
-		Max = std::max(Max, Arr[i]);
+		Vector2f temp = rects[SwapBuffer[i].first].getPosition();
+		rects[SwapBuffer[i].first].setPosition(rects[SwapBuffer[i].second].getPosition());
+		rects[SwapBuffer[i].second].setPosition(temp);
+		std::swap(rects[SwapBuffer[i].first], rects[SwapBuffer[i].second]);
 	}
-	Min--;
-	Max++;
+	SwapBuffer.clear();
+	sbuf.unlock();
+	buf.lock();
+	if (Buffer.size() == 0)
+	{
+		buf.unlock();
+		for (unsigned int i = 0; i < TempBuffer.size(); i++)
+		{
+			rects[TempBuffer[i].first.first].setFillColor(Color::Green);
+			rects[TempBuffer[i].first.second].setFillColor(Color::Red);
+			rects[TempBuffer[i].second].setFillColor(Color::Blue);
+		}
+	}
+	else
+	{
+		TempBuffer.resize(Buffer.size());
+		for (unsigned int i = 0; i < Buffer.size(); i++)
+		{
+			rects[Buffer[i].first.first].setFillColor(Color::Green);
+			rects[Buffer[i].first.second].setFillColor(Color::Red);
+			rects[Buffer[i].second].setFillColor(Color::Blue);
+			TempBuffer[i] = Buffer[i];
+		}
+		buf.unlock();
+		Buffer.clear();
+	}
 }
 
 void Sort()
 {
 	std::lock_guard<std::mutex> lg(m);
+	std::unique_lock<std::mutex> ul(buf, std::defer_lock);
+	std::unique_lock<std::mutex> sbul(sbuf, std::defer_lock);
 	InProgress = true;
-	for (int i = 0; i < Arr.size(); i++)
+	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		int min, temp;
 		min = i;
-		for (int j = i + 1; j < Arr.size(); j++)
+		for (unsigned int j = i + 1; j < Arr.size(); j++)
 		{
 			if (!InProgress)
 			{
-				a = -1;
-				b = -1;
+				ul.lock();
+				Buffer.clear();
+				ul.unlock();
 				return;
 			}
 			sleep(milliseconds(ms));
-			a = j;
-			b = min;
+			ul.lock();
+			if (Buffer.size() < BufferLimit)
+			{
+				Buffer.push_back({ { i,  j }, min });
+			}
+			ul.unlock();
 			if (Arr[j] < Arr[min])
 			{
 				min = j;
 			}
 		}
+		sbul.lock();
+		SwapBuffer.push_back({ min, i });
+		sbul.unlock();
 		temp = Arr[min];
 		Arr[min] = Arr[i];
 		Arr[i] = temp;
 	}
 	InProgress = false;
-	a = -1;
-	b = -1;
+	Buffer.clear();
 }
 
 void CaptureClick()
@@ -105,7 +128,7 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			ms = std::max(0, ms - 1);
+			ms++;
 		}
 		flag = false;
 	}
@@ -113,7 +136,7 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			ms++;
+			ms = std::max(0, ms - 1);
 		}
 		flag = false;
 	}
@@ -122,7 +145,7 @@ void CaptureClick()
 		if (flag)
 		{
 			InProgress = false;
-			Randomize();
+			std::random_shuffle(Arr.begin(), Arr.end());
 		}
 		flag = false;
 	}
@@ -138,6 +161,7 @@ void CaptureClick()
 			}
 			else
 			{
+				ElapsedTime = 0;
 				std::thread t(Sort);
 				t.detach();
 			}
@@ -150,29 +174,36 @@ void CaptureClick()
 	}
 }
 
+void OnClose()
+{
+	InProgress = false;
+	m.lock();
+	m.unlock();
+}
+
 void Start()
 {
 	f.loadFromFile("arial.ttf");
 	t.setFont(f);
 	t.setPosition(Vector2f(0.0f, 0.0f));
 	t.setCharacterSize(15);
-	t.setColor(Color::Green);
+	t.setFillColor(Color::Green);
 	Arr.resize(Size);
 	MainWindow = engine->GetWindow();
 	rects = new RectangleShape[Arr.size()];
 	float RectWidth = (float)Width / Arr.size();
 	for (int i = 0; i < Size; i++)
 	{
-		Arr[i] = rand() % Size;
-		Min = std::min(Min, Arr[i]);
-		Max = std::max(Max, Arr[i]);
+		Arr[i] = i;
 		rects[i].setSize(Vector2f(RectWidth / 1.09f, 1.0f));
 		rects[i].setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
 		engine->RegisterObject(0, &rects[i]);
 	}
-	Min--;
-	Max++;
+	Min = -1;
+	Max = Size;
+	std::random_shuffle(Arr.begin(), Arr.end());
 	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(DrawArray);
 	engine->RegisterRoutine(CaptureClick);
+	engine->RegisterOnClose(OnClose);
 }

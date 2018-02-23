@@ -20,6 +20,10 @@ void Engine::Main()
 				//Window Closed Event
 			case Event::Closed:
 				Log("Closed event triggered");
+				for (unsigned int i = 0; i < Close.size(); i++)
+				{
+					Close[i]();
+				}
 				MainWindow->close();
 				break;
 			}
@@ -167,6 +171,11 @@ void Engine::UnRegisterRoutine(void(*routine)())
 		}
 	}
 	Log("[Error]Routine not found");
+}
+
+void Engine::RegisterOnClose(void(*routine)())
+{
+	Close.push_back(routine);
 }
 
 Engine::~Engine()
