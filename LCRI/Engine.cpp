@@ -27,7 +27,7 @@ void Engine::Main()
 		//Logic
 		RoutineManager();
 		//Rendering
-		Render();
+		//Render();
 	}
 }
 
@@ -75,6 +75,11 @@ Engine::Engine(void (Engine::**MainPtr)())
 	//Assiging pointer to main function so that it can call it later
 	//Note that this is the only way the main function can be called from outside of the class
 	*MainPtr = &Engine::Main;
+}
+
+RenderWindow * Engine::GetWindow()
+{
+	return MainWindow;
 }
 
 void Engine::Log(std::string s)

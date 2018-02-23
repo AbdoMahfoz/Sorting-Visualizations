@@ -1,7 +1,7 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-const int Size = 1366;
+const int Size = 100;
 const int Height = 768;
 const int Width = 1366;
 int RandomizeRate = 0;
@@ -9,16 +9,45 @@ int xoffset = 0, yoffset = 0;
 
 std::vector < int > Arr;
 RectangleShape* rects;
+RenderWindow* MainWindow;
 int Min = Size, Max = -1;
 float ElapsedTime = 0;
+int a = -1, b = -1;
 
 void DrawArray()
 {
+	Event event;
+	while (MainWindow->pollEvent(event))
+	{
+		switch (event.type)
+		{
+			//Window Closed Event
+		case Event::Closed:
+			MainWindow->close();
+			exit(0);
+			break;
+		}
+	}
+	MainWindow->clear();
 	for (unsigned int i = 0; i < Arr.size(); i++)
 	{
 		float x = (float)(Arr[i] - Min) / (Max - Min);
 		rects[i].setSize(Vector2f(rects[i].getSize().x, x * Height * -1));
+		if (i == a)
+		{
+			rects[i].setFillColor(Color::Red);
+		}
+		else if (i == b)
+		{
+			rects[i].setFillColor(Color::Blue);
+		}
+		else
+		{
+			rects[i].setFillColor(Color::White);
+		}
+		MainWindow->draw(rects[i]);
 	}
+	MainWindow->display();
 }
 
 void Randomize()
@@ -47,12 +76,27 @@ void Randomize()
 
 void Sort()
 {
-	for (unsigned int i = 0; i < Arr.size(); i++)
+	for (int i = 0; i < Arr.size(); i++)
 	{
-		Arr[i] = i;
+		int min, temp;
+		min = i;
+		for (int j = i + 1; j < Arr.size(); j++)
+		{
+			DrawArray();
+			sleep(milliseconds(2));
+			a = j;
+			b = min;
+			if (Arr[j] < Arr[min])
+			{
+				min = j;
+			}
+		}
+		temp = Arr[min];
+		Arr[min] = Arr[i];
+		Arr[i] = temp;
 	}
-	Min = -1;
-	Max = Arr.size();
+	a = -1;
+	b = -1;
 }
 
 void CaptureClick()
@@ -100,6 +144,7 @@ void CaptureClick()
 void Start()
 {
 	Arr.resize(Size);
+	MainWindow = engine->GetWindow();
 	rects = new RectangleShape[Arr.size()];
 	float RectWidth = (float)Width / Arr.size();
 	for (int i = 0; i < Size; i++)

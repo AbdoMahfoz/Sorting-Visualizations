@@ -51,6 +51,8 @@ public:
 	//Default constructor
 	Engine(void (Engine::**MainPtr)());
 
+	RenderWindow* GetWindow();
+
 	//function used for logging
 	void Log(std::string s);
 
