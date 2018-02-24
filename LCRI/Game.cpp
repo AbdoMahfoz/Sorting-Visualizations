@@ -2,7 +2,7 @@
 #include "RoutineClass.h"
 
 unsigned int BufferLimit = 100;
-int Size = 100;
+int Size = 1000000;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
@@ -30,7 +30,9 @@ void SfDrawText()
 		ElapsedTime += engine->GetDeltaTime();
 	}
 	engine->ss << "Step time = " << ms << "ms" << "\tFramerate = " << (int)(1.0f / engine->GetDeltaTime()) << "\tElapsed time = " << ElapsedTime << 's';
+	engine->LockRendering();
 	t.setString(engine->ss.str());
+	engine->UnlockRendering();
 	engine->ss.str("");
 }
 
@@ -55,6 +57,7 @@ void UpdateRectangle(int i, Color c)
 
 void DrawArray()
 {
+	engine->LockRendering();
 	if (!InProgress)
 	{
 		TempBuffer.clear();
@@ -65,6 +68,7 @@ void DrawArray()
 			UpdateRectangle(i, Color::White);
 		}
 		engine->UnRegisterRoutine(DrawArray);
+		engine->UnlockRendering();
 		return;
 	}
 	sbuf.lock();
@@ -95,6 +99,7 @@ void DrawArray()
 		Buffer.clear();
 	}
 	buf.unlock();
+	engine->UnlockRendering();
 }
 
 void Sort()
@@ -227,8 +232,8 @@ void Start()
 	std::random_shuffle(Arr.begin(), Arr.end());
 	engine->RegisterObject(1, &t);
 	engine->RegisterObject(0, RectBatch);
+	engine->RegisterRoutine(CaptureClick);
 	engine->RegisterRoutine(DrawArray);
 	engine->RegisterRoutine(SfDrawText);
-	engine->RegisterRoutine(CaptureClick);
 	engine->RegisterOnClose(OnClose);
 }

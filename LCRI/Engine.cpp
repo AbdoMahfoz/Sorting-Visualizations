@@ -17,36 +17,33 @@ void Engine::Main()
 				//Window Closed Event
 			case Event::Closed:
 				Log("Closed event triggered");
+				Terminate = true;
+				cv.notify_one();
+				t->join();
+				delete t;
 				for (unsigned int i = 0; i < Close.size(); i++)
 				{
 					Close[i]();
 				}
-				//Terminate = true;
-				//cv.notify_one();
-				//t->join();
-				//delete t;
 				return;
 			}
 		}
 		//Logic
 		RoutineManager();
-		//std::lock_guard<std::mutex> l(m2);
-		//cv.notify_one();
-		Render();
+		cv.notify_all();
 	}
 }
 
 void Engine::Render()
 {
-	//MainWindow->setActive(true);
-	//std::unique_lock<std::mutex> ul(m1);
+	MainWindow->setActive(true);
+	std::unique_lock<std::mutex> ul(m);
 	//Activating Vsync
-	//Log("Enabling Vsync");
-	//MainWindow->setVerticalSyncEnabled(true);
-	//while (!Terminate)
-	//{
-		//cv.wait(ul);
-		//std::lock_guard < std::mutex > l(m2);
+	Log("Enabling Vsync");
+	MainWindow->setVerticalSyncEnabled(true);
+	while (!Terminate)
+	{
+		cv.wait(ul);
 		//Clear the window
 		MainWindow->clear(Color::Black);
 		//Main Rendering loop
@@ -63,7 +60,8 @@ void Engine::Render()
 		//Calcualting deltaTime...
 		DeltaTime = clock.restart().asSeconds();
 		ElapsedTime += DeltaTime;
-	//}
+	}
+	MainWindow->close();
 }
 
 void Engine::RoutineManager()
@@ -88,9 +86,8 @@ Engine::Engine(void (Engine::**MainPtr)())
 	ss.str("");
 #pragma endregion
 	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
-	MainWindow->setVerticalSyncEnabled(true);
-	//MainWindow->setActive(false);
-	//t = new std::thread(&Engine::Render, this);
+	MainWindow->setActive(false);
+	t = new std::thread(&Engine::Render, this);
 	//Assiging pointer to main function so that it can call it later
 	//Note that this is the only way the main function can be called from outside of the class
 	*MainPtr = &Engine::Main;
@@ -103,7 +100,6 @@ RenderWindow * Engine::GetWindow()
 
 void Engine::Log(std::string s)
 {
-	/*
 	static bool First = true;
 	std::cout << "[" << ElapsedTime << "] " << s << '\n';
 	std::ofstream out;
@@ -118,7 +114,6 @@ void Engine::Log(std::string s)
 	}
 	out << "[" << ElapsedTime << "] " << s << '\n';
 	out.close();
-	*/
 }
 
 float Engine::GetDeltaTime()
@@ -134,7 +129,7 @@ void Engine::RegisterObject(int Layer, Drawable* Object)
 	ss.str("");
 #pragma endregion
 	//Registering object into specified layer
-	std::lock_guard < std::mutex > l(m2);
+	std::lock_guard < std::mutex > l(m);
 	Objects[Layer].push_back(Object);
 }
 
@@ -192,6 +187,16 @@ void Engine::UnRegisterRoutine(void(*routine)())
 void Engine::RegisterOnClose(void(*routine)())
 {
 	Close.push_back(routine);
+}
+
+void Engine::LockRendering()
+{
+	m.lock();
+}
+
+void Engine::UnlockRendering()
+{
+	m.unlock();
 }
 
 Engine::~Engine()

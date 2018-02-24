@@ -46,7 +46,8 @@ private:
 	std::vector < void(*)() > Close;
 
 	std::condition_variable cv;
-	std::mutex m1, m2;
+
+	std::mutex m;
 
 	std::thread *t;
 
@@ -85,6 +86,10 @@ public:
 	void UnRegisterRoutine(void(*routine)());
 
 	void RegisterOnClose(void(*routine)());
+
+	void LockRendering();
+
+	void UnlockRendering();
 
 	//Default Deconstructor for deallocating pointers
 	~Engine();
