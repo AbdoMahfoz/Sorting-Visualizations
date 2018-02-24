@@ -21,35 +21,49 @@ void Engine::Main()
 				{
 					Close[i]();
 				}
-				MainWindow->close();
-				break;
+				//Terminate = true;
+				//cv.notify_one();
+				//t->join();
+				//delete t;
+				return;
 			}
 		}
-		//Calcualting deltaTime...
-		DeltaTime = clock.restart().asSeconds();
-		ElapsedTime += DeltaTime;
 		//Logic
 		RoutineManager();
-		//Rendering
+		//std::lock_guard<std::mutex> l(m2);
+		//cv.notify_one();
 		Render();
 	}
 }
 
 void Engine::Render()
 {
-	//Clear the window
-	MainWindow->clear(Color::Black);
-	//Main Rendering loop
-	//iterates throught all registered objects and draw them layer by layer
-	for (int i = 0; i < 7; i++)
-	{
-		for (unsigned int j = 0; j < Objects[i].size(); j++)
+	//MainWindow->setActive(true);
+	//std::unique_lock<std::mutex> ul(m1);
+	//Activating Vsync
+	//Log("Enabling Vsync");
+	//MainWindow->setVerticalSyncEnabled(true);
+	//while (!Terminate)
+	//{
+		//cv.wait(ul);
+		//std::lock_guard < std::mutex > l(m2);
+		//Clear the window
+		MainWindow->clear(Color::Black);
+		//Main Rendering loop
+		//iterates throught all registered objects and draw them layer by layer
+		for (int i = 0; i < 7; i++)
 		{
-			MainWindow->draw(*Objects[i][j]);
+			for (unsigned int j = 0; j < Objects[i].size(); j++)
+			{
+				MainWindow->draw(*Objects[i][j]);
+			}
 		}
-	}
-	//Display the drawn contents;
-	MainWindow->display();
+		//Display the drawn contents;
+		MainWindow->display();
+		//Calcualting deltaTime...
+		DeltaTime = clock.restart().asSeconds();
+		ElapsedTime += DeltaTime;
+	//}
 }
 
 void Engine::RoutineManager()
@@ -66,16 +80,17 @@ Engine::Engine(void (Engine::**MainPtr)())
 	//Setting initaial values
 	ElapsedTime = 0;
 	DeltaTime = 0;
+	Terminate = false;
 	//Intialization of window
 #pragma region Logging
 	ss << "Intializing window : Width = " << SCREEN_WIDTH << ", Height = " << SCREEN_HEIGHT << ", Title = " << TITLE;
 	Log(ss.str());
 	ss.str("");
-	#pragma endregion
+#pragma endregion
 	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
-	//Activating Vsync
-	Log("Enabling Vsync");
 	MainWindow->setVerticalSyncEnabled(true);
+	//MainWindow->setActive(false);
+	//t = new std::thread(&Engine::Render, this);
 	//Assiging pointer to main function so that it can call it later
 	//Note that this is the only way the main function can be called from outside of the class
 	*MainPtr = &Engine::Main;
@@ -119,6 +134,7 @@ void Engine::RegisterObject(int Layer, Drawable* Object)
 	ss.str("");
 #pragma endregion
 	//Registering object into specified layer
+	std::lock_guard < std::mutex > l(m2);
 	Objects[Layer].push_back(Object);
 }
 

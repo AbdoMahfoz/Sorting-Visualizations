@@ -2,13 +2,15 @@
 #include "RoutineClass.h"
 
 unsigned int BufferLimit = 100;
-int Size = 100;
+int Size = 1000000;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
+float RectWidth = (float)Width / Size;
 
 std::vector < int > Arr;
-RectangleShape* rects;
+RectangleShape SuperRect;
+VertexArray* RectBatch;
 RenderWindow* MainWindow;
 Font f;
 Text t;
@@ -32,6 +34,29 @@ void SfDrawText()
 	engine->ss.str("");
 }
 
+void SetSuperRect(int i, Color c)
+{
+	float x = (float)(Arr[i] - Min) / (Max - Min);
+	SuperRect.setFillColor(c);
+	SuperRect.setSize(Vector2f(RectWidth / 1.09f, x * Height * -1));
+	SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
+}
+
+void UpdateRectangle(int i)
+{
+	int k = i * 4;
+	Vector2f Position = SuperRect.getPosition();
+	Color color = SuperRect.getFillColor();
+	RectBatch->operator[](k).position = SuperRect.getPoint(0) + Position;
+	RectBatch->operator[](k + 1).position = SuperRect.getPoint(1) + Position;
+	RectBatch->operator[](k + 2).position = SuperRect.getPoint(2) + Position;
+	RectBatch->operator[](k + 3).position = SuperRect.getPoint(3) + Position;
+	RectBatch->operator[](k).color = color;
+	RectBatch->operator[](k + 1).color = color;
+	RectBatch->operator[](k + 2).color = color;
+	RectBatch->operator[](k + 3).color = color;
+}
+
 void DrawArray()
 {
 	if (!InProgress)
@@ -41,9 +66,8 @@ void DrawArray()
 		Buffer.clear();
 		for (unsigned int i = 0; i < Arr.size(); i++)
 		{
-			float x = (float)(Arr[i] - Min) / (Max - Min);
-			rects[i].setFillColor(Color::White);
-			rects[i].setSize(Vector2f(rects[i].getSize().x, x * Height * -1));
+			SetSuperRect(i, Color::White);
+			UpdateRectangle(i);
 		}
 		engine->UnRegisterRoutine(DrawArray);
 		return;
@@ -51,12 +75,10 @@ void DrawArray()
 	sbuf.lock();
 	for (unsigned int i = 0; i < SwapBuffer.size(); i++)
 	{
-		Vector2f temp = rects[SwapBuffer[i].first].getPosition();
-		rects[SwapBuffer[i].first].setPosition(rects[SwapBuffer[i].second].getPosition());
-		rects[SwapBuffer[i].second].setPosition(temp);
-		rects[SwapBuffer[i].first].setFillColor(Color::White);
-		rects[SwapBuffer[i].second].setFillColor(Color::White);
-		std::swap(rects[SwapBuffer[i].first], rects[SwapBuffer[i].second]);
+		SetSuperRect(SwapBuffer[i].first, Color::White);
+		UpdateRectangle(SwapBuffer[i].first);
+		SetSuperRect(SwapBuffer[i].second, Color::White);
+		UpdateRectangle(SwapBuffer[i].second);
 	}
 	SwapBuffer.clear();
 	sbuf.unlock();
@@ -65,16 +87,22 @@ void DrawArray()
 	{
 		for (unsigned int i = 0; i < TempBuffer.size(); i++)
 		{
-			rects[TempBuffer[i].first.first].setFillColor(Color::White);
-			rects[TempBuffer[i].first.second].setFillColor(Color::White);
-			rects[TempBuffer[i].second].setFillColor(Color::White);
+			SetSuperRect(TempBuffer[i].first.first, Color::White);
+			UpdateRectangle(TempBuffer[i].first.first);
+			SetSuperRect(TempBuffer[i].first.second, Color::White);
+			UpdateRectangle(TempBuffer[i].first.second);
+			SetSuperRect(TempBuffer[i].second, Color::White);
+			UpdateRectangle(TempBuffer[i].second);
 		}
 		TempBuffer.resize(Buffer.size());
 		for (unsigned int i = 0; i < Buffer.size(); i++)
 		{
-			rects[Buffer[i].first.first].setFillColor(Color::Green);
-			rects[Buffer[i].first.second].setFillColor(Color::Red);
-			rects[Buffer[i].second].setFillColor(Color::Blue);
+			SetSuperRect(Buffer[i].first.first, Color::Green);
+			UpdateRectangle(Buffer[i].first.first);
+			SetSuperRect(Buffer[i].first.second, Color::Red);
+			UpdateRectangle(Buffer[i].first.second);
+			SetSuperRect(Buffer[i].second, Color::Blue);
+			UpdateRectangle(Buffer[i].second);
 			TempBuffer[i] = Buffer[i];
 		}
 		Buffer.clear();
@@ -189,6 +217,7 @@ void OnClose()
 	InProgress = false;
 	m.lock();
 	m.unlock();
+	delete[] RectBatch;
 }
 
 void Start()
@@ -200,19 +229,28 @@ void Start()
 	t.setFillColor(Color::Green);
 	Arr.resize(Size);
 	MainWindow = engine->GetWindow();
-	rects = new RectangleShape[Arr.size()];
-	float RectWidth = (float)Width / Arr.size();
-	for (int i = 0; i < Size; i++)
+	RectBatch = new VertexArray(Quads, Size * 4);
+	for (unsigned int i = 0, k = 0; i < Size; i++, k += 4)
 	{
 		Arr[i] = i;
-		rects[i].setSize(Vector2f(RectWidth / 1.09f, 1.0f));
-		rects[i].setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
-		engine->RegisterObject(0, &rects[i]);
+		SuperRect.setSize(Vector2f(RectWidth / 1.09f, 1.0f));
+		SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
+		Vector2f Position = SuperRect.getPosition();
+		Color color = SuperRect.getFillColor();
+		RectBatch->operator[](k).position = SuperRect.getPoint(0) + Position;
+		RectBatch->operator[](k + 1).position = SuperRect.getPoint(1) + Position;
+		RectBatch->operator[](k + 2).position = SuperRect.getPoint(2) + Position;
+		RectBatch->operator[](k + 3).position = SuperRect.getPoint(3) + Position;
+		RectBatch->operator[](k).color = color;
+		RectBatch->operator[](k + 1).color = color;
+		RectBatch->operator[](k + 2).color = color;
+		RectBatch->operator[](k + 3).color = color;
 	}
 	Min = -1;
 	Max = Size;
 	std::random_shuffle(Arr.begin(), Arr.end());
 	engine->RegisterObject(1, &t);
+	engine->RegisterObject(0, RectBatch);
 	engine->RegisterRoutine(DrawArray);
 	engine->RegisterRoutine(SfDrawText);
 	engine->RegisterRoutine(CaptureClick);

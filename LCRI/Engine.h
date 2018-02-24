@@ -6,6 +6,7 @@
 #include <fstream>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 #include <Windows.h>
 
 #define SCREEN_WIDTH 800
@@ -43,6 +44,13 @@ private:
 	std::vector < void(*)() > Routines;
 
 	std::vector < void(*)() > Close;
+
+	std::condition_variable cv;
+	std::mutex m1, m2;
+
+	std::thread *t;
+
+	bool Terminate;
 
 	//The rendering function
 	void Render();
