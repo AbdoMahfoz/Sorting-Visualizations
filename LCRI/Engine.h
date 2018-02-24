@@ -4,6 +4,11 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <thread>
+#include <mutex>
+#include <queue>
+#include <condition_variable>
+#include <Windows.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -39,11 +44,33 @@ private:
 	//routines are functions that the engine run every frame
 	std::vector < void(*)() > Routines;
 
+	//A vector for holding functions that should be called when the application is about to exit
+	//Usually used for cleaning up
+	std::vector < void(*)() > Close;
+
+	//Used internally for synchronoizing Rendering thread with Main thread
+	std::condition_variable RenderCV, LogCV;
+
+	//The base mutex for synchronoizing Rendering thread with Main Thread
+	std::mutex RenderMutex, LogMutex;
+
+	//A pointer to the Rendering thread and Logging thread
+	std::thread *RenderThread, *LogThread;
+
+	//Log Queue to be processed by LogThread
+	std::queue< std::string > LogQueue;
+
+	//A flag for notifiying the Rendering thread that it needs to terminate
+	bool Terminate;
+
 	//The rendering function
 	void Render();
 
 	//The functions that manage running routines sequentially
 	void RoutineManager();
+
+	//A Helper function that runs on a separate thread
+	void LogHelper();
 public:
 	//Dummy stringstream for logging purpose
 	std::stringstream ss;
@@ -68,6 +95,19 @@ public:
 
 	//Function for deregistering previosuly registered routine to stop LogicManager from invoking it
 	void UnRegisterRoutine(void(*routine)());
+
+	//Function for registering a function to be called as the game exists
+	void RegisterOnClose(void(*func)());
+
+	//Function for unregistering a function from getting called as the game exists
+	void UnRegisterOnClose(void(*func)());
+
+	//Prevents Rendering thread from execution to let you modify properties of drawable objects
+	//UnlockRendering has to be called otherwise rendering thread will hault forever
+	void LockRendering();
+
+	//Gets called only after LockRendering was called to let the rendering thread do it's work
+	void UnlockRendering();
 
 	//Default Deconstructor for deallocating pointers
 	~Engine();

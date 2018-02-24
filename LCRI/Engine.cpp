@@ -8,9 +8,6 @@ void Engine::Main()
 	int n = 0;
 	while (MainWindow->isOpen())
 	{
-		//Calcualting deltaTime...
-		DeltaTime = clock.restart().asSeconds();
-		ElapsedTime += DeltaTime;
 		//Handling Events...
 		Event event;
 		while (MainWindow->pollEvent(event))
@@ -20,32 +17,60 @@ void Engine::Main()
 				//Window Closed Event
 			case Event::Closed:
 				Log("Closed event triggered");
-				MainWindow->close();
-				break;
+				//Signaling to the Render thread and Logging thread to hault
+				Terminate = true;
+				RenderCV.notify_one();
+				LogCV.notify_one();
+				LogThread->join();
+				RenderThread->join();
+				delete RenderThread;
+				delete LogThread;
+				//Calling all OnClose function
+				for (unsigned int i = 0; i < Close.size(); i++)
+				{
+					Close[i]();
+				}
+				return;
 			}
 		}
 		//Logic
 		RoutineManager();
-		//Rendering
-		Render();
+		//Signaling Render function to work
+		RenderCV.notify_all();
 	}
 }
 
 void Engine::Render()
 {
-	//Clear the window
-	MainWindow->clear(Color::Black);
-	//Main Rendering loop
-	//iterates throught all registered objects and draw them layer by layer
-	for (int i = 0; i < 7; i++)
+	//Assigns MainWindow to this thread
+	MainWindow->setActive(true);
+	//Creating the lock for RenderMutex
+	std::unique_lock<std::mutex> lock(RenderMutex);
+	//Activating Vsync
+	Log("Enabling Vsync");
+	MainWindow->setVerticalSyncEnabled(true);
+	while (!Terminate)
 	{
-		for (unsigned int j = 0; j < Objects[i].size(); j++)
+		RenderCV.wait(lock);
+		//Clear the window
+		MainWindow->clear(Color::Black);
+		//Main Rendering loop
+		//iterates throught all registered objects and draw them layer by layer
+		for (int i = 0; i < 7; i++)
 		{
-			MainWindow->draw(*Objects[i][j]);
+			for (unsigned int j = 0; j < Objects[i].size(); j++)
+			{
+				MainWindow->draw(*Objects[i][j]);
+			}
 		}
+		//Display the drawn contents;
+		MainWindow->display();
+		//Calcualting deltaTime...
+		DeltaTime = clock.restart().asSeconds();
+		ElapsedTime += DeltaTime;
 	}
-	//Display the drawn contents;
-	MainWindow->display();
+	//Closing Window
+	MainWindow->close();
 }
 
 void Engine::RoutineManager()
@@ -57,21 +82,61 @@ void Engine::RoutineManager()
 	}
 }
 
+void Engine::LogHelper()
+{
+	std::unique_lock<std::mutex> lock(LogMutex, std::defer_lock);
+	while (!Terminate)
+	{
+		if (LogQueue.empty())
+		{
+			lock.lock();
+			LogCV.wait(lock);
+			lock.unlock();
+			if (LogQueue.empty())
+			{
+				continue;
+			}
+		}
+		static bool First = true;
+		lock.lock();
+		std::cout << "[" << ElapsedTime << "] " << LogQueue.front() << '\n';
+		lock.unlock();
+		std::ofstream out;
+		if (First)
+		{
+			out.open("log.txt");
+			First = false;
+		}
+		else
+		{
+			out.open("log.txt", std::ios::app);
+		}
+		lock.lock();
+		out << "[" << ElapsedTime << "] " << LogQueue.front() << '\n';
+		LogQueue.pop();
+		lock.unlock();
+		out.close();
+	}
+}
+
 Engine::Engine(void (Engine::**MainPtr)())
 {
 	//Setting initaial values
 	ElapsedTime = 0;
 	DeltaTime = 0;
-	//Intialization of window
+	Terminate = false;
 #pragma region Logging
 	ss << "Intializing window : Width = " << SCREEN_WIDTH << ", Height = " << SCREEN_HEIGHT << ", Title = " << TITLE;
 	Log(ss.str());
 	ss.str("");
-	#pragma endregion
-	MainWindow = new RenderWindow(VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), TITLE);
-	//Activating Vsync
-	Log("Enabling Vsync");
-	MainWindow->setVerticalSyncEnabled(true);
+#pragma endregion
+	//Intialization of window
+	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
+	//Deactivating Window from Main Thread
+	MainWindow->setActive(false);
+	//Launching RenderThread
+	RenderThread = new std::thread(&Engine::Render, this);
+	LogThread = new std::thread(&Engine::LogHelper, this);
 	//Assiging pointer to main function so that it can call it later
 	//Note that this is the only way the main function can be called from outside of the class
 	*MainPtr = &Engine::Main;
@@ -79,20 +144,11 @@ Engine::Engine(void (Engine::**MainPtr)())
 
 void Engine::Log(std::string s)
 {
-	static bool First = true;
-	std::cout << "[" << ElapsedTime << "] " << s << '\n';
-	std::ofstream out;
-	if (First)
 	{
-		out.open("log.txt");
-		First = false;
+		std::lock_guard<std::mutex> lock(LogMutex);
+		LogQueue.push(s);
 	}
-	else
-	{
-		out.open("log.txt", std::ios::app);
-	}
-	out << "[" << ElapsedTime << "] " << s << '\n';
-	out.close();
+	LogCV.notify_one();
 }
 
 float Engine::GetDeltaTime()
@@ -107,6 +163,8 @@ void Engine::RegisterObject(int Layer, Drawable* Object)
 	Log(ss.str());
 	ss.str("");
 #pragma endregion
+	//Locking RenderMutex to register an object
+	std::lock_guard < std::mutex > l(RenderMutex);
 	//Registering object into specified layer
 	Objects[Layer].push_back(Object);
 }
@@ -160,6 +218,42 @@ void Engine::UnRegisterRoutine(void(*routine)())
 		}
 	}
 	Log("[Error]Routine not found");
+}
+
+void Engine::RegisterOnClose(void(*func)())
+{
+	//Pushes the function to the Close vector to be called as the game exists
+	Close.push_back(func);
+}
+
+void Engine::UnRegisterOnClose(void(*func)())
+{
+#pragma region Logging
+	ss << "Attempting to find and unregister OnClose func " << func;
+	Log(ss.str());
+	ss.str("");
+#pragma endregion
+	//Removing the routine from the vector
+	for (unsigned int i = 0; i < Close.size(); i++)
+	{
+		if (Close[i] == func)
+		{
+			Log("OnClose found and erased");
+			Close.erase(Close.begin() + i);
+			return;
+		}
+	}
+	Log("[Error]OnClose not found");
+}
+
+void Engine::LockRendering()
+{
+	RenderMutex.lock();
+}
+
+void Engine::UnlockRendering()
+{
+	RenderMutex.unlock();
 }
 
 Engine::~Engine()
