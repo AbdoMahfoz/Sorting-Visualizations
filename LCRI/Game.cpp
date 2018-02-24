@@ -2,7 +2,7 @@
 #include "RoutineClass.h"
 
 unsigned int BufferLimit = 100;
-int Size = 1000000;
+int Size = 100;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
@@ -34,17 +34,13 @@ void SfDrawText()
 	engine->ss.str("");
 }
 
-void SetSuperRect(int i, Color c)
+void UpdateRectangle(int i, Color c)
 {
 	float x = (float)(Arr[i] - Min) / (Max - Min);
+	int k = i * 4;
 	SuperRect.setFillColor(c);
 	SuperRect.setSize(Vector2f(RectWidth / 1.09f, x * Height * -1));
 	SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
-}
-
-void UpdateRectangle(int i)
-{
-	int k = i * 4;
 	Vector2f Position = SuperRect.getPosition();
 	Color color = SuperRect.getFillColor();
 	RectBatch->operator[](k).position = SuperRect.getPoint(0) + Position;
@@ -66,8 +62,7 @@ void DrawArray()
 		Buffer.clear();
 		for (unsigned int i = 0; i < Arr.size(); i++)
 		{
-			SetSuperRect(i, Color::White);
-			UpdateRectangle(i);
+			UpdateRectangle(i, Color::White);
 		}
 		engine->UnRegisterRoutine(DrawArray);
 		return;
@@ -75,10 +70,8 @@ void DrawArray()
 	sbuf.lock();
 	for (unsigned int i = 0; i < SwapBuffer.size(); i++)
 	{
-		SetSuperRect(SwapBuffer[i].first, Color::White);
-		UpdateRectangle(SwapBuffer[i].first);
-		SetSuperRect(SwapBuffer[i].second, Color::White);
-		UpdateRectangle(SwapBuffer[i].second);
+		UpdateRectangle(SwapBuffer[i].first, Color::White);
+		UpdateRectangle(SwapBuffer[i].second, Color::White);
 	}
 	SwapBuffer.clear();
 	sbuf.unlock();
@@ -87,22 +80,16 @@ void DrawArray()
 	{
 		for (unsigned int i = 0; i < TempBuffer.size(); i++)
 		{
-			SetSuperRect(TempBuffer[i].first.first, Color::White);
-			UpdateRectangle(TempBuffer[i].first.first);
-			SetSuperRect(TempBuffer[i].first.second, Color::White);
-			UpdateRectangle(TempBuffer[i].first.second);
-			SetSuperRect(TempBuffer[i].second, Color::White);
-			UpdateRectangle(TempBuffer[i].second);
+			UpdateRectangle(TempBuffer[i].first.first, Color::White);
+			UpdateRectangle(TempBuffer[i].first.second, Color::White);
+			UpdateRectangle(TempBuffer[i].second, Color::White);
 		}
 		TempBuffer.resize(Buffer.size());
 		for (unsigned int i = 0; i < Buffer.size(); i++)
 		{
-			SetSuperRect(Buffer[i].first.first, Color::Green);
-			UpdateRectangle(Buffer[i].first.first);
-			SetSuperRect(Buffer[i].first.second, Color::Red);
-			UpdateRectangle(Buffer[i].first.second);
-			SetSuperRect(Buffer[i].second, Color::Blue);
-			UpdateRectangle(Buffer[i].second);
+			UpdateRectangle(Buffer[i].first.first, Color::Green);
+			UpdateRectangle(Buffer[i].first.second, Color::Red);
+			UpdateRectangle(Buffer[i].second, Color::Blue);
 			TempBuffer[i] = Buffer[i];
 		}
 		Buffer.clear();
@@ -230,21 +217,10 @@ void Start()
 	Arr.resize(Size);
 	MainWindow = engine->GetWindow();
 	RectBatch = new VertexArray(Quads, Size * 4);
-	for (unsigned int i = 0, k = 0; i < Size; i++, k += 4)
+	for (int i = 0, k = 0; i < Size; i++, k += 4)
 	{
 		Arr[i] = i;
-		SuperRect.setSize(Vector2f(RectWidth / 1.09f, 1.0f));
-		SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
-		Vector2f Position = SuperRect.getPosition();
-		Color color = SuperRect.getFillColor();
-		RectBatch->operator[](k).position = SuperRect.getPoint(0) + Position;
-		RectBatch->operator[](k + 1).position = SuperRect.getPoint(1) + Position;
-		RectBatch->operator[](k + 2).position = SuperRect.getPoint(2) + Position;
-		RectBatch->operator[](k + 3).position = SuperRect.getPoint(3) + Position;
-		RectBatch->operator[](k).color = color;
-		RectBatch->operator[](k + 1).color = color;
-		RectBatch->operator[](k + 2).color = color;
-		RectBatch->operator[](k + 3).color = color;
+		UpdateRectangle(i, Color::White);
 	}
 	Min = -1;
 	Max = Size;
