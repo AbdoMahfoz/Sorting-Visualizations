@@ -51,8 +51,8 @@ private:
 	//Used internally for synchronoizing Rendering thread with Main thread
 	std::condition_variable RenderCV, LogCV;
 
-	//The base mutex for synchronoizing Rendering thread with Main Thread
-	std::mutex RenderMutex, LogMutex;
+	//The base mutexes for synchronoizing Rendering thread and Loggin thread with Main Thread
+	std::mutex RenderMutex, RenderStartedMutex, LogMutex;
 
 	//A pointer to the Rendering thread and Logging thread
 	std::thread *RenderThread, *LogThread;
@@ -60,7 +60,7 @@ private:
 	//Log Queue to be processed by LogThread
 	std::queue< std::string > LogQueue;
 
-	//A flag for notifiying the Rendering thread that it needs to terminate
+	//A flag for notifiying the Rendering thread and Logging thread that they need to terminate
 	bool Terminate;
 
 	//The rendering function
@@ -102,12 +102,9 @@ public:
 	//Function for unregistering a function from getting called as the game exists
 	void UnRegisterOnClose(void(*func)());
 
-	//Prevents Rendering thread from execution to let you modify properties of drawable objects
-	//UnlockRendering has to be called otherwise rendering thread will hault forever
-	void LockRendering();
-
-	//Gets called only after LockRendering was called to let the rendering thread do it's work
-	void UnlockRendering();
+	//Waits for the renderer to finish rendering if it is currently rendering
+	//has to be called before any visual changes to avoid data race
+	void WaitForRenderer();
 
 	//Default Deconstructor for deallocating pointers
 	~Engine();

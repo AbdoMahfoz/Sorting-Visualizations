@@ -35,8 +35,16 @@ void Engine::Main()
 		}
 		//Logic
 		RoutineManager();
-		//Signaling Render function to work
-		RenderCV.notify_all();
+		//Waiting for the renderer to finish it's current frame
+		{
+			std::lock_guard<std::mutex> lock(RenderMutex);
+		}
+		//Signaling for the render to start working
+		RenderCV.notify_one();
+		//Waiting for the renderer to recieve the signal
+		{
+			std::lock_guard<std::mutex> lock(RenderStartedMutex);
+		}
 	}
 }
 
@@ -51,7 +59,11 @@ void Engine::Render()
 	MainWindow->setVerticalSyncEnabled(true);
 	while (!Terminate)
 	{
+		//Getting into sleep state; waiting for the Main thread to finish
+		RenderStartedMutex.lock();
 		RenderCV.wait(lock);
+		//Signaling to the Main thread that Rendering is about to begin
+		RenderStartedMutex.unlock();
 		//Clear the window
 		MainWindow->clear(Color::Black);
 		//Main Rendering loop
@@ -84,9 +96,11 @@ void Engine::RoutineManager()
 
 void Engine::LogHelper()
 {
+	//A Lock for synchronoizing Queue access
 	std::unique_lock<std::mutex> lock(LogMutex, std::defer_lock);
 	while (!Terminate)
 	{
+		//Sleeping when we have nothing to do
 		if (LogQueue.empty())
 		{
 			lock.lock();
@@ -97,11 +111,14 @@ void Engine::LogHelper()
 				continue;
 			}
 		}
+		//A flag for knowing if the file has been opened before
 		static bool First = true;
+		//Output to Console
 		lock.lock();
 		std::cout << "[" << ElapsedTime << "] " << LogQueue.front() << '\n';
-		lock.unlock();
+		//Output to file
 		std::ofstream out;
+		//Openeing file
 		if (First)
 		{
 			out.open("log.txt");
@@ -111,8 +128,9 @@ void Engine::LogHelper()
 		{
 			out.open("log.txt", std::ios::app);
 		}
-		lock.lock();
+		//Writing to file
 		out << "[" << ElapsedTime << "] " << LogQueue.front() << '\n';
+		//Clear the entry we just logged
 		LogQueue.pop();
 		lock.unlock();
 		out.close();
@@ -246,13 +264,10 @@ void Engine::UnRegisterOnClose(void(*func)())
 	Log("[Error]OnClose not found");
 }
 
-void Engine::LockRendering()
+void Engine::WaitForRenderer()
 {
+	//Waiting for the renderer by locking and unlocking RenderMutex
 	RenderMutex.lock();
-}
-
-void Engine::UnlockRendering()
-{
 	RenderMutex.unlock();
 }
 

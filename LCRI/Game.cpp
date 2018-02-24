@@ -29,9 +29,7 @@ void SfDrawText()
 		ElapsedTime += engine->GetDeltaTime();
 	}
 	engine->ss << "Step time = " << ms << "ms" << "\tFramerate = " << (int)(1.0f / engine->GetDeltaTime()) << "\tElapsed time = " << ElapsedTime << 's';
-	engine->LockRendering();
 	t.setString(engine->ss.str());
-	engine->UnlockRendering();
 	engine->ss.str("");
 }
 
@@ -56,7 +54,7 @@ void UpdateRectangle(int i, Color c)
 
 void DrawArray()
 {
-	engine->LockRendering();
+	engine->WaitForRenderer();
 	if (!InProgress)
 	{
 		TempBuffer.clear();
@@ -67,7 +65,6 @@ void DrawArray()
 			UpdateRectangle(i, Color::White);
 		}
 		engine->UnRegisterRoutine(DrawArray);
-		engine->UnlockRendering();
 		return;
 	}
 	sbuf.lock();
@@ -98,7 +95,6 @@ void DrawArray()
 		Buffer.clear();
 	}
 	buf.unlock();
-	engine->UnlockRendering();
 }
 
 void Sort()
