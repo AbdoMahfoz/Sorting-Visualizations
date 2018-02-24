@@ -1,8 +1,7 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-unsigned int BufferLimit = 100;
-int Size = 100;
+int Size = 1366;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
@@ -24,13 +23,12 @@ std::mutex m, buf, sbuf;
 
 void SfDrawText()
 {
+	engine->Log(std::to_string(engine->GetDeltaTime()));
 	if (InProgress)
 	{
 		ElapsedTime += engine->GetDeltaTime();
 	}
-	engine->ss << "Step time = " << ms << "ms" << "\tFramerate = " << (int)(1.0f / engine->GetDeltaTime()) << "\tElapsed time = " << ElapsedTime << 's';
-	t.setString(engine->ss.str());
-	engine->ss.str("");
+	t.setString("Step time = " + std::to_string(ms) + "ms\tElapsed time = " + std::to_string(ElapsedTime) + "s\tFramerate = " + std::to_string((int)(1.0 / engine->GetDeltaTime())));
 }
 
 void UpdateRectangle(int i, Color c)
@@ -118,10 +116,7 @@ void Sort()
 			}
 			sleep(milliseconds(ms));
 			ul.lock();
-			if (Buffer.size() < BufferLimit)
-			{
-				Buffer.push_back({ { i,  j }, min });
-			}
+			Buffer.push_back({ { i,  j }, min });
 			ul.unlock();
 			if (Arr[j] < Arr[min])
 			{

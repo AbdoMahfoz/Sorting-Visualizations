@@ -40,10 +40,13 @@ void Engine::Main()
 			std::lock_guard<std::mutex> lock(RenderMutex);
 		}
 		//Signaling for the render to start working
-		RenderCV.notify_one();
 		//Waiting for the renderer to recieve the signal
 		{
-			std::lock_guard<std::mutex> lock(RenderStartedMutex);
+			std::unique_lock <std::mutex> lock(RenderStartedMutex, std::defer_lock);
+			while (!lock.try_lock())
+			{
+				RenderCV.notify_one();
+			}
 		}
 	}
 }
@@ -144,9 +147,8 @@ Engine::Engine(void (Engine::**MainPtr)())
 	DeltaTime = 0;
 	Terminate = false;
 #pragma region Logging
-	ss << "Intializing window : Width = " << SCREEN_WIDTH << ", Height = " << SCREEN_HEIGHT << ", Title = " << TITLE;
-	Log(ss.str());
-	ss.str("");
+	Log("Intializing window : Width = " + std::to_string(SCREEN_WIDTH) + ", Height = " + std::to_string(SCREEN_HEIGHT)
+		+ ", Title = " + TITLE);
 #pragma endregion
 	//Intialization of window
 	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
