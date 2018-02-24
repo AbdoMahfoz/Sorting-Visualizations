@@ -10,6 +10,10 @@ void Animate()
 {
 	//Moving objects based on their respective booleans
 	//Each boolean decides the direction in which the object will slide
+	//engine->ss << "Framerate = " << (1.0f / engine->GetDeltaTime());
+	//engine->Log(engine->ss.str());
+	//engine->ss.str("");
+	engine->WaitForRenderer();
 	x.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseX),
 		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseY));
 	s.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseX),
