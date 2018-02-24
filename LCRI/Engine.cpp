@@ -8,9 +8,6 @@ void Engine::Main()
 	int n = 0;
 	while (MainWindow->isOpen())
 	{
-		//Calcualting deltaTime...
-		DeltaTime = clock.restart().asSeconds();
-		ElapsedTime += DeltaTime;
 		//Handling Events...
 		Event event;
 		while (MainWindow->pollEvent(event))
@@ -28,6 +25,9 @@ void Engine::Main()
 				break;
 			}
 		}
+		//Calcualting deltaTime...
+		DeltaTime = clock.restart().asSeconds();
+		ElapsedTime += DeltaTime;
 		//Logic
 		RoutineManager();
 		//Rendering

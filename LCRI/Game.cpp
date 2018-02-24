@@ -1,8 +1,8 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-const int Size = 100;
-const int BufferLimit = 100;
+unsigned int BufferLimit = 100;
+int Size = 100;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
@@ -21,27 +21,32 @@ int ms = 5;
 bool InProgress = false;
 std::mutex m, buf, sbuf;
 
-void DrawArray()
+void SfDrawText()
 {
 	if (InProgress)
 	{
 		ElapsedTime += engine->GetDeltaTime();
 	}
-	else
-	{
-		TempBuffer.clear();
-	}
-	engine->ss << "Elapsed time = " << ElapsedTime << "s\t" << "Step time = " << ms << "ms";
+	engine->ss << "Step time = " << ms << "ms" << "\tFramerate = " << (int)(1.0f / engine->GetDeltaTime()) << "\tElapsed time = " << ElapsedTime << 's';
 	t.setString(engine->ss.str());
 	engine->ss.str("");
-	for (unsigned int i = 0; i < Arr.size(); i++)
+}
+
+void DrawArray()
+{
+	if (!InProgress)
 	{
-		if (!InProgress)
+		TempBuffer.clear();
+		SwapBuffer.clear();
+		Buffer.clear();
+		for (unsigned int i = 0; i < Arr.size(); i++)
 		{
 			float x = (float)(Arr[i] - Min) / (Max - Min);
+			rects[i].setFillColor(Color::White);
 			rects[i].setSize(Vector2f(rects[i].getSize().x, x * Height * -1));
 		}
-		rects[i].setFillColor(Color::White);
+		engine->UnRegisterRoutine(DrawArray);
+		return;
 	}
 	sbuf.lock();
 	for (unsigned int i = 0; i < SwapBuffer.size(); i++)
@@ -49,23 +54,21 @@ void DrawArray()
 		Vector2f temp = rects[SwapBuffer[i].first].getPosition();
 		rects[SwapBuffer[i].first].setPosition(rects[SwapBuffer[i].second].getPosition());
 		rects[SwapBuffer[i].second].setPosition(temp);
+		rects[SwapBuffer[i].first].setFillColor(Color::White);
+		rects[SwapBuffer[i].second].setFillColor(Color::White);
 		std::swap(rects[SwapBuffer[i].first], rects[SwapBuffer[i].second]);
 	}
 	SwapBuffer.clear();
 	sbuf.unlock();
 	buf.lock();
-	if (Buffer.size() == 0)
+	if (Buffer.size() != 0)
 	{
-		buf.unlock();
 		for (unsigned int i = 0; i < TempBuffer.size(); i++)
 		{
-			rects[TempBuffer[i].first.first].setFillColor(Color::Green);
-			rects[TempBuffer[i].first.second].setFillColor(Color::Red);
-			rects[TempBuffer[i].second].setFillColor(Color::Blue);
+			rects[TempBuffer[i].first.first].setFillColor(Color::White);
+			rects[TempBuffer[i].first.second].setFillColor(Color::White);
+			rects[TempBuffer[i].second].setFillColor(Color::White);
 		}
-	}
-	else
-	{
 		TempBuffer.resize(Buffer.size());
 		for (unsigned int i = 0; i < Buffer.size(); i++)
 		{
@@ -74,9 +77,9 @@ void DrawArray()
 			rects[Buffer[i].second].setFillColor(Color::Blue);
 			TempBuffer[i] = Buffer[i];
 		}
-		buf.unlock();
 		Buffer.clear();
 	}
+	buf.unlock();
 }
 
 void Sort()
@@ -144,8 +147,14 @@ void CaptureClick()
 	{
 		if (flag)
 		{
-			InProgress = false;
+			if (InProgress)
+			{
+				InProgress = false;
+				m.lock();
+				m.unlock();
+			}
 			std::random_shuffle(Arr.begin(), Arr.end());
+			engine->RegisterRoutine(DrawArray);
 		}
 		flag = false;
 	}
@@ -164,6 +173,7 @@ void CaptureClick()
 				ElapsedTime = 0;
 				std::thread t(Sort);
 				t.detach();
+				engine->RegisterRoutine(DrawArray);
 			}
 		}
 		flag = false;
@@ -204,6 +214,7 @@ void Start()
 	std::random_shuffle(Arr.begin(), Arr.end());
 	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(DrawArray);
+	engine->RegisterRoutine(SfDrawText);
 	engine->RegisterRoutine(CaptureClick);
 	engine->RegisterOnClose(OnClose);
 }
