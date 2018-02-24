@@ -9,6 +9,7 @@
 #include <queue>
 #include <condition_variable>
 #include <Windows.h>
+#include <string>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -71,6 +72,7 @@ private:
 
 	//A Helper function that runs on a separate thread
 	void LogHelper();
+
 public:
 	//Dummy stringstream for logging purpose
 	std::stringstream ss;
