@@ -2,7 +2,7 @@
 #include "RoutineClass.h"
 
 unsigned int BufferLimit = 100;
-int Size = 1000000;
+int Size = 100;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
@@ -11,7 +11,6 @@ float RectWidth = (float)Width / Size;
 std::vector < int > Arr;
 RectangleShape SuperRect;
 VertexArray* RectBatch;
-RenderWindow* MainWindow;
 Font f;
 Text t;
 int Min = Size, Max = -1;
@@ -220,7 +219,6 @@ void Start()
 	t.setCharacterSize(15);
 	t.setFillColor(Color::Green);
 	Arr.resize(Size);
-	MainWindow = engine->GetWindow();
 	RectBatch = new VertexArray(Quads, Size * 4);
 	for (int i = 0, k = 0; i < Size; i++, k += 4)
 	{
