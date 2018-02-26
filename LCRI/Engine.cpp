@@ -151,7 +151,7 @@ Engine::Engine(void (Engine::**MainPtr)())
 		+ ", Title = " + TITLE);
 #pragma endregion
 	//Intialization of window
-	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
+	MainWindow = new RenderWindow(VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), TITLE);
 	//Deactivating Window from Main Thread
 	MainWindow->setActive(false);
 	//Launching RenderThread
