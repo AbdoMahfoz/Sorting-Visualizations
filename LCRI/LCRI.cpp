@@ -1,5 +1,4 @@
 #include "Engine.h"
-#include <Windows.h>
 
 using namespace sf;
 

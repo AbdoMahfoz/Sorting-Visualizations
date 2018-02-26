@@ -1,7 +1,7 @@
 #include "Engine.h"
 #include "RoutineClass.h"
 
-int Size = 1366;
+int Size = 100;
 int Height = VideoMode::getDesktopMode().height;
 int Width = VideoMode::getDesktopMode().width;
 int xoffset = 0, yoffset = 0;
@@ -14,6 +14,7 @@ Font f;
 Text t;
 int Min = Size, Max = -1;
 float ElapsedTime = 0;
+std::thread *SortingThread;
 std::vector< std::pair< std::pair<int, int >, int > > Buffer;
 std::vector< std::pair< std::pair<int, int >, int > > TempBuffer;
 std::vector < std::pair < int, int > > SwapBuffer;
@@ -28,7 +29,8 @@ void SfDrawText()
 	{
 		ElapsedTime += engine->GetDeltaTime();
 	}
-	t.setString("Step time = " + std::to_string(ms) + "ms\tElapsed time = " + std::to_string(ElapsedTime) + "s\tFramerate = " + std::to_string((int)(1.0 / engine->GetDeltaTime())));
+	t.setString("Step time = " + std::to_string(ms) + "ms\tElapsed time = " + std::to_string(ElapsedTime)
+		+ "s\tFramerate = " + std::to_string((int)(1.0 / engine->GetDeltaTime())));
 }
 
 void UpdateRectangle(int i, Color c)
@@ -97,6 +99,7 @@ void DrawArray()
 
 void Sort()
 {
+	SetThreadDescription(GetCurrentThread(), L"Selection Sort Thread");
 	std::lock_guard<std::mutex> lg(m);
 	std::unique_lock<std::mutex> ul(buf, std::defer_lock);
 	std::unique_lock<std::mutex> sbul(sbuf, std::defer_lock);
@@ -177,12 +180,14 @@ void CaptureClick()
 				InProgress = false;
 				m.lock();
 				m.unlock();
+				SortingThread->join();
+				delete SortingThread;
+				SortingThread = nullptr;
 			}
 			else
 			{
 				ElapsedTime = 0;
-				std::thread t(Sort);
-				t.detach();
+				SortingThread = new std::thread(Sort);
 				engine->RegisterRoutine(DrawArray);
 			}
 		}
@@ -199,11 +204,15 @@ void OnClose()
 	InProgress = false;
 	m.lock();
 	m.unlock();
+	if (SortingThread != nullptr)
+		SortingThread->join();
+	delete SortingThread;
 	delete[] RectBatch;
 }
 
 void Start()
 {
+	SortingThread = nullptr;
 	f.loadFromFile("arial.ttf");
 	t.setFont(f);
 	t.setPosition(Vector2f(0.0f, 0.0f));

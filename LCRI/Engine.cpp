@@ -53,6 +53,7 @@ void Engine::Main()
 
 void Engine::Render()
 {
+	SetThreadDescription(GetCurrentThread(), L"Rendering Thread");
 	//Assigns MainWindow to this thread
 	MainWindow->setActive(true);
 	//Creating the lock for RenderMutex
@@ -99,6 +100,7 @@ void Engine::RoutineManager()
 
 void Engine::LogHelper()
 {
+	SetThreadDescription(GetCurrentThread(), L"Logging Thread");
 	//A Lock for synchronoizing Queue access
 	std::unique_lock<std::mutex> lock(LogMutex, std::defer_lock);
 	while (!Terminate)
@@ -211,7 +213,7 @@ void Engine::UnRegisterObject(int Layer, Drawable* Object)
 
 void Engine::RegisterRoutine(void(*routine)())
 {
-#pragma region
+#pragma region Logging
 	ss << "Registering routine " << routine;
 	Log(ss.str());
 	ss.str("");
