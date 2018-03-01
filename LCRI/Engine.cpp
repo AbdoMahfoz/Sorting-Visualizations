@@ -39,6 +39,9 @@ void Engine::Main()
 		{
 			std::lock_guard<std::mutex> lock(RenderMutex);
 		}
+		//Calcualting deltaTime...
+		DeltaTime = clock.restart().asSeconds();
+		ElapsedTime += DeltaTime;
 		//Signaling for the render to start working
 		//Waiting for the renderer to recieve the signal
 		{
@@ -81,9 +84,6 @@ void Engine::Render()
 		}
 		//Display the drawn contents;
 		MainWindow->display();
-		//Calcualting deltaTime...
-		DeltaTime = clock.restart().asSeconds();
-		ElapsedTime += DeltaTime;
 	}
 	//Closing Window
 	MainWindow->close();

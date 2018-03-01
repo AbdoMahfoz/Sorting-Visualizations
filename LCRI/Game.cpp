@@ -37,19 +37,17 @@ void UpdateRectangle(int i, Color c)
 {
 	float x = (float)(Arr[i] - Min) / (Max - Min);
 	int k = i * 4;
-	SuperRect.setFillColor(c);
 	SuperRect.setSize(Vector2f(RectWidth / 1.09f, x * Height * -1));
 	SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
 	Vector2f Position = SuperRect.getPosition();
-	Color color = SuperRect.getFillColor();
 	RectBatch->operator[](k).position = SuperRect.getPoint(0) + Position;
 	RectBatch->operator[](k + 1).position = SuperRect.getPoint(1) + Position;
 	RectBatch->operator[](k + 2).position = SuperRect.getPoint(2) + Position;
 	RectBatch->operator[](k + 3).position = SuperRect.getPoint(3) + Position;
-	RectBatch->operator[](k).color = color;
-	RectBatch->operator[](k + 1).color = color;
-	RectBatch->operator[](k + 2).color = color;
-	RectBatch->operator[](k + 3).color = color;
+	RectBatch->operator[](k).color = c;
+	RectBatch->operator[](k + 1).color = c;
+	RectBatch->operator[](k + 2).color = c;
+	RectBatch->operator[](k + 3).color = c;
 }
 
 void DrawArray()
