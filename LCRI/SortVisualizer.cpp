@@ -1,12 +1,14 @@
 #include "SortVisualizer.h"
 
-SortVisualizer::SortVisualizer(int Size, int Width, int Height, int xoffset, int yoffset)
+SortVisualizer::SortVisualizer(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr)
 {
 	this->Size = Size;
 	this->Height = Height;
 	this->Width = Width;
 	this->xoffset = xoffset;
 	this->yoffset = yoffset;
+	this->ms = ms;
+	this->Arr = Arr;
 	Max = Size;
 	Min = -1;
 	RectWidth = (float)Width / Size;
