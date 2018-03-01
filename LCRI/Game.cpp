@@ -5,7 +5,7 @@
 Font f;
 Text t;
 float ElapsedTime = 0;
-int Size = 100 / 3;
+int Size = 100;
 int ms = 5, *Arr[5];
 bool InProgress = false;
 std::vector < SortVisualizer* > Sorts;
@@ -116,13 +116,14 @@ void CaptureClick()
 
 void OnClose()
 {
+	for (int i = 0; i < Sorts.size(); i++)
+	{
+		Sorts[i]->StopSort();
+		delete Sorts[i];
+	}
 	for (int i = 0; i < 5; i++)
 	{
 		delete[] Arr[i];
-	}
-	for (int i = 0; i < Sorts.size(); i++)
-	{
-		delete Sorts[i];
 	}
 }
 
@@ -141,11 +142,11 @@ void Start()
 			Arr[j][i] = i;
 		}
 	}
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, VideoMode::getDesktopMode().width / 3, VideoMode::getDesktopMode().height / 2, 0, 0, &ms, Arr[0]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, VideoMode::getDesktopMode().width / 3, VideoMode::getDesktopMode().height / 2, VideoMode::getDesktopMode().width / 3, 0, &ms, Arr[1]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, VideoMode::getDesktopMode().width / 3, VideoMode::getDesktopMode().height / 2, 2 * VideoMode::getDesktopMode().width / 3, 0, &ms, Arr[2]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, VideoMode::getDesktopMode().width / 2, VideoMode::getDesktopMode().height / 2, 0, VideoMode::getDesktopMode().height / 2, &ms, Arr[3]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, VideoMode::getDesktopMode().width / 2, VideoMode::getDesktopMode().height / 2, VideoMode::getDesktopMode().width / 2, VideoMode::getDesktopMode().height / 2, &ms, Arr[4]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 3) - 20, VideoMode::getDesktopMode().height / 2, 0, 0, &ms, Arr[0]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 3) - 20, VideoMode::getDesktopMode().height / 2, VideoMode::getDesktopMode().width / 3, 0, &ms, Arr[1]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 3) - 20, VideoMode::getDesktopMode().height / 2, 2 * VideoMode::getDesktopMode().width / 3, 0, &ms, Arr[2]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 2) - 20, VideoMode::getDesktopMode().height / 2, 0, VideoMode::getDesktopMode().height / 2, &ms, Arr[3]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 2) - 20, VideoMode::getDesktopMode().height / 2, VideoMode::getDesktopMode().width / 2, VideoMode::getDesktopMode().height / 2, &ms, Arr[4]));
 	Randomize();
 	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(SfDrawText);

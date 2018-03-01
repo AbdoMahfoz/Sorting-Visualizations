@@ -106,10 +106,13 @@ void SelectionSort::StartSort()
 
 void SelectionSort::StopSort()
 {
-	InProgress = false;
-	m.lock();
-	m.unlock();
-	SortingThread->join();
-	delete SortingThread;
-	SortingThread = nullptr;
+	if (InProgress)
+	{
+		InProgress = false;
+		m.lock();
+		m.unlock();
+		SortingThread->join();
+		delete SortingThread;
+		SortingThread = nullptr;
+	}
 }
