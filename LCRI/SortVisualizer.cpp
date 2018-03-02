@@ -9,6 +9,7 @@ SortVisualizer::SortVisualizer(int Size, int Width, int Height, int xoffset, int
 	this->yoffset = yoffset;
 	this->ms = ms;
 	this->Arr = Arr;
+	InProgress = false;
 	Max = Size;
 	Min = -1;
 	RectWidth = (float)Width / Size;
@@ -31,6 +32,11 @@ void SortVisualizer::UpdateRectangle(int i, Color c)
 	RectBatch->operator[](k + 1).color = c;
 	RectBatch->operator[](k + 2).color = c;
 	RectBatch->operator[](k + 3).color = c;
+}
+
+bool SortVisualizer::IsInProgress()
+{
+	return InProgress;
 }
 
 SortVisualizer::~SortVisualizer()

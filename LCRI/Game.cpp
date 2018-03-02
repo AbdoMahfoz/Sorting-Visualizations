@@ -1,5 +1,5 @@
 #include "Engine.h"
-#include "RoutineClass.h"
+#include "SortVisualizer.h"
 #include "Sorts.h"
 
 Font f;
@@ -25,14 +25,24 @@ void Randomize()
 {
 	for (int i = 0; i < 5; i++)
 	{
-		std::random_shuffle(Arr[i], Arr[i] + Size);
+		if (i == 0)
+		{
+			std::random_shuffle(Arr[i], Arr[i] + Size);
+		}
+		else
+		{
+			for (int j = 0; j < Size; j++)
+			{
+				Arr[i][j] = Arr[0][j];
+			}
+		}
 	}
 }
 
 void Update()
 {
 	bool flag = false;
-	for (int i = 0; i < Sorts.size(); i++)
+	for (unsigned int i = 0; i < Sorts.size(); i++)
 	{
 		Sorts[i]->UpdateArray();
 		if (Sorts[i]->IsInProgress())
@@ -72,7 +82,7 @@ void CaptureClick()
 		{
 			if (InProgress)
 			{
-				for (int i = 0; i < Sorts.size(); i++)
+				for (unsigned int i = 0; i < Sorts.size(); i++)
 				{
 					Sorts[i]->StopSort();
 				}
@@ -89,7 +99,7 @@ void CaptureClick()
 		{
 			if (InProgress)
 			{
-				for (int i = 0; i < Sorts.size(); i++)
+				for (unsigned int i = 0; i < Sorts.size(); i++)
 				{
 					Sorts[i]->StopSort();
 				}
@@ -98,7 +108,7 @@ void CaptureClick()
 			else
 			{
 				ElapsedTime = 0;
-				for (int i = 0; i < Sorts.size(); i++)
+				for (unsigned int i = 0; i < Sorts.size(); i++)
 				{
 					Sorts[i]->StartSort();
 				}
@@ -116,7 +126,7 @@ void CaptureClick()
 
 void OnClose()
 {
-	for (int i = 0; i < Sorts.size(); i++)
+	for (unsigned int i = 0; i < Sorts.size(); i++)
 	{
 		Sorts[i]->StopSort();
 		delete Sorts[i];
@@ -142,11 +152,16 @@ void Start()
 			Arr[j][i] = i;
 		}
 	}
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 3) - 20, VideoMode::getDesktopMode().height / 2, 0, 0, &ms, Arr[0]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 3) - 20, VideoMode::getDesktopMode().height / 2, VideoMode::getDesktopMode().width / 3, 0, &ms, Arr[1]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 3) - 20, VideoMode::getDesktopMode().height / 2, 2 * VideoMode::getDesktopMode().width / 3, 0, &ms, Arr[2]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 2) - 20, VideoMode::getDesktopMode().height / 2, 0, VideoMode::getDesktopMode().height / 2, &ms, Arr[3]));
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (VideoMode::getDesktopMode().width / 2) - 20, VideoMode::getDesktopMode().height / 2, VideoMode::getDesktopMode().width / 2, VideoMode::getDesktopMode().height / 2, &ms, Arr[4]));
+	int width = VideoMode::getDesktopMode().width, height = VideoMode::getDesktopMode().height;
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 2) - 20, height, 0, 0, &ms, Arr[0]));
+	Sorts.push_back((SortVisualizer*)new MergeSort(Size, (width / 2) - 20, height, width / 2, 0, &ms, Arr[1]));
+	/*
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 3) - 20, height / 2, width / 3, 0, &ms, Arr[1]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 3) - 20, height / 2, 2 * width / 3, 0, &ms, Arr[2]));
+	Sorts.push_back((SortVisualizer*)new MergeSort(Size, (width / 2) - 20, height / 2, 0, height / 2, &ms, Arr[3]));
+	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 2) - 20, height / 2, width / 2, height / 2, &ms, Arr[4]));
+	*/
 	Randomize();
 	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(SfDrawText);

@@ -8,12 +8,14 @@ protected:
 	float RectWidth;
 	RectangleShape SuperRect;
 	VertexArray *RectBatch;
+	std::thread *SortingThread;
+	bool InProgress;
 	void UpdateRectangle(int index, Color color);
 public:
 	SortVisualizer(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr);
+	bool IsInProgress();
 	virtual void UpdateArray() = 0;
 	virtual void StartSort() = 0;
 	virtual void StopSort() = 0;
-	inline virtual bool IsInProgress() = 0;
 	~SortVisualizer();
 };
