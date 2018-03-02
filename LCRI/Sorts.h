@@ -17,6 +17,14 @@ public:
 	InsertionSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr);
 };
 
+class BubbleSort : SortVisualizer
+{
+private:
+	void Sort();
+public:
+	BubbleSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr);
+};
+
 class MergeSort : SortVisualizer
 {
 private:
@@ -25,4 +33,12 @@ private:
 	void Sort();
 public:
 	MergeSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr);
+};
+
+class QuickSort : SortVisualizer
+{
+private:
+	void Sort();
+public:
+	QuickSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr);
 };

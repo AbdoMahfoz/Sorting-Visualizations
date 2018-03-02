@@ -46,7 +46,7 @@ void SelectionSort::Sort()
 }
 
 SelectionSort::SelectionSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr)
-			 : SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
+	: SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
 {
 }
 
@@ -91,6 +91,58 @@ void InsertionSort::Sort()
 }
 
 InsertionSort::InsertionSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr)
+	: SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
+{
+}
+
+//---------------------------Bubble-Sort----------------------------
+
+void BubbleSort::Sort()
+{
+	std::unique_lock < std::mutex > ColorBufferLock(ColorBufferMutex, std::defer_lock);
+	std::unique_lock < std::mutex > UpdateBufferLock(UpdateBufferMutex, std::defer_lock);
+	InProgress = true;
+	bool Running = true;
+	while (Running)
+	{
+		Running = false;
+		for (int i = 0; i < Size - 1; i++)
+		{
+			if (!InProgress)
+			{
+				return;
+			}
+			sleep(milliseconds(*ms));
+			if (Arr[i] > Arr[i + 1])
+			{
+				ColorBufferLock.lock();
+				ColorDescription cd;
+				cd.RedIndex[0] = i;
+				cd.RedIndex[1] = i + 1;;
+				ColorBuffer.push_back(cd);
+				ColorBufferLock.unlock();
+				Running = true;
+				UpdateBufferLock.lock();
+				UpdateBuffer.push_back(i);
+				UpdateBuffer.push_back(i + 1);
+				std::swap(Arr[i], Arr[i + 1]);
+				UpdateBufferLock.unlock();
+			}
+			else
+			{
+				ColorBufferLock.lock();
+				ColorDescription cd;
+				cd.GreenIndex[0] = i;
+				cd.GreenIndex[1] = i + 1;;
+				ColorBuffer.push_back(cd);
+				ColorBufferLock.unlock();
+			}
+		}
+	}
+	InProgress = false;
+}
+
+BubbleSort::BubbleSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr)
 	: SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
 {
 }
@@ -184,7 +236,7 @@ void MergeSort::Partiton(int s, int f)
 	}
 	int mid = (s + f) / 2;
 	Partiton(s, mid);
-	if(!InProgress)
+	if (!InProgress)
 	{
 		return;
 	}
@@ -204,6 +256,6 @@ void MergeSort::Sort()
 }
 
 MergeSort::MergeSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr)
-	     : SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
+	: SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
 {
 }
