@@ -38,6 +38,8 @@ public:
 class QuickSort : SortVisualizer
 {
 private:
+	int Partition(int s, int f);
+	void QSort(int s, int f);
 	void Sort();
 public:
 	QuickSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr);

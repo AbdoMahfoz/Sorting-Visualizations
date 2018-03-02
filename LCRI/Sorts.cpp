@@ -259,3 +259,77 @@ MergeSort::MergeSort(int Size, int Width, int Height, int xoffset, int yoffset, 
 	: SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
 {
 }
+
+//---------------------------Quick-Sort----------------------------
+
+int QuickSort::Partition(int s, int f)
+{
+	std::unique_lock < std::mutex > ColorBufferLock(ColorBufferMutex, std::defer_lock);
+	std::unique_lock < std::mutex > UpdateBufferLock(UpdateBufferMutex, std::defer_lock);
+	int res = s;
+	for (int i = s; i < f; i++)
+	{
+		if (!InProgress)
+		{
+			return -1;
+		}
+		sleep(milliseconds(*ms));
+		ColorBufferLock.lock();
+		ColorDescription cd;
+		cd.GreenIndex[0] = res;
+		cd.RedIndex[0] = i;
+		cd.BlueIndex[0] = f;
+		cd.BlueIndex[1] = s;
+		ColorBuffer.push_back(cd);
+		ColorBufferLock.unlock();
+		if (Arr[i] <= Arr[f])
+		{
+			UpdateBufferLock.lock();
+			UpdateBuffer.push_back(i);
+			UpdateBuffer.push_back(res + 1);
+			std::swap(Arr[i], Arr[res++]);
+			UpdateBufferLock.unlock();
+		}
+	}
+	UpdateBufferLock.lock();
+	UpdateBuffer.push_back(res);
+	UpdateBuffer.push_back(f);
+	std::swap(Arr[res], Arr[f]);
+	UpdateBufferLock.unlock();
+	return res;
+}
+
+void QuickSort::QSort(int s, int f)
+{
+	if (s >= f)
+	{
+		return;
+	}
+	if (!InProgress)
+	{
+		return;
+	}
+	int index = Partition(s, f);
+	if (!InProgress)
+	{
+		return;
+	}
+	QSort(s, index - 1);
+	if (!InProgress)
+	{
+		return;
+	}
+	QSort(index + 1, f);
+}
+
+void QuickSort::Sort()
+{
+	InProgress = true;
+	QSort(0, Size - 1);
+	InProgress = false;
+}
+
+QuickSort::QuickSort(int Size, int Width, int Height, int xoffset, int yoffset, int* ms, int* Arr)
+	: SortVisualizer(Size, Width, Height, xoffset, yoffset, ms, Arr)
+{
+}
