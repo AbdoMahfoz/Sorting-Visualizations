@@ -1,5 +1,4 @@
 #include "Engine.h"
-#include "SortVisualizer.h"
 #include "Sorts.h"
 
 Font f;
@@ -12,7 +11,6 @@ std::vector < SortVisualizer* > Sorts;
 
 void SfDrawText()
 {
-	engine->Log(std::to_string(engine->GetDeltaTime()));
 	if (InProgress)
 	{
 		ElapsedTime += engine->GetDeltaTime();
@@ -23,18 +21,12 @@ void SfDrawText()
 
 void Randomize()
 {
-	for (int i = 0; i < 5; i++)
+	std::random_shuffle(Arr[0], Arr[0] + Size);
+	for (int i = 1; i < 5; i++)
 	{
-		if (i == 0)
+		for (int j = 0; j < Size; j++)
 		{
-			std::random_shuffle(Arr[i], Arr[i] + Size);
-		}
-		else
-		{
-			for (int j = 0; j < Size; j++)
-			{
-				Arr[i][j] = Arr[0][j];
-			}
+			Arr[i][j] = Arr[0][j];
 		}
 	}
 }
@@ -153,7 +145,7 @@ void Start()
 		}
 	}
 	int width = VideoMode::getDesktopMode().width, height = VideoMode::getDesktopMode().height;
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 2) - 20, height, 0, 0, &ms, Arr[0]));
+	Sorts.push_back((SortVisualizer*)new InsertionSort(Size, (width / 2) - 20, height, 0, 0, &ms, Arr[0]));
 	Sorts.push_back((SortVisualizer*)new MergeSort(Size, (width / 2) - 20, height, width / 2, 0, &ms, Arr[1]));
 	/*
 	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));
