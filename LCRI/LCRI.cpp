@@ -1,7 +1,5 @@
 #include "Engine.h"
-#include <Windows.h>
-
-using namespace sf;
+//#include <Windows.h>
 
 Engine* engine;
 
@@ -13,11 +11,12 @@ void Intialize()
 	delete engine;
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
+/*int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
 {
 	Intialize();
 	return 0;
 }
+*/
 
 int main()
 {

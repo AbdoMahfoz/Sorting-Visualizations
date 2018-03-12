@@ -18,6 +18,8 @@ log.txt
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+Executables/
+Objects
 x64/
 x86/
 bld/

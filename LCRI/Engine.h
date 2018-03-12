@@ -8,7 +8,6 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
-#include <Windows.h>
 #include <string>
 
 #define SCREEN_WIDTH 800
