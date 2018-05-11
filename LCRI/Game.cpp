@@ -145,18 +145,11 @@ void Start()
 		}
 	}
 	int width = VideoMode::getDesktopMode().width, height = VideoMode::getDesktopMode().height;
-	/*
-	Sorts.push_back((SortVisualizer*)new QuickSort(Size, width, height, 0, 0, &ms, Arr[0]));
-	*/
-	/*
-	Sorts.push_back((SortVisualizer*)new InsertionSort(Size, (width / 2) - 20, height, 0, 0, &ms, Arr[0]));
-	Sorts.push_back((SortVisualizer*)new BubbleSort(Size, (width / 2) - 20, height, width / 2, 0, &ms, Arr[1]));
-	*/
-	Sorts.push_back((SortVisualizer*)new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));
-	Sorts.push_back((SortVisualizer*)new InsertionSort(Size, (width / 3) - 20, height / 2, width / 3, 0, &ms, Arr[1]));
-	Sorts.push_back((SortVisualizer*)new BubbleSort(Size, (width / 3) - 20, height / 2, 2 * width / 3, 0, &ms, Arr[2]));
-	Sorts.push_back((SortVisualizer*)new MergeSort(Size, (width / 2) - 20, height / 2, 0, height / 2, &ms, Arr[3]));
-	Sorts.push_back((SortVisualizer*)new QuickSort(Size, (width / 2) - 20, height / 2, width / 2, height / 2, &ms, Arr[4]));
+	Sorts.push_back(new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));
+	Sorts.push_back(new InsertionSort(Size, (width / 3) - 20, height / 2, width / 3, 0, &ms, Arr[1]));
+	Sorts.push_back(new BubbleSort(Size, (width / 3) - 20, height / 2, 2 * width / 3, 0, &ms, Arr[2]));
+	Sorts.push_back(new MergeSort(Size, (width / 2) - 20, height / 2, 0, height / 2, &ms, Arr[3]));
+	Sorts.push_back(new QuickSort(Size, (width / 2) - 20, height / 2, width / 2, height / 2, &ms, Arr[4]));
 	Randomize();
 	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(SfDrawText);
