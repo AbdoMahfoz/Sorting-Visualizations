@@ -6,6 +6,8 @@ void Engine::Main()
 	Start();
 	//Main Loop
 	int n = 0;
+	//Start clock from here
+	clock.restart();
 	while (MainWindow->isOpen())
 	{
 		//Handling Events...
@@ -33,30 +35,30 @@ void Engine::Main()
 				return;
 			}
 		}
-		//Logic
-		RoutineManager();
+		//Call all reserved routines
+		for (unsigned int i = 0; i < Routines.size(); i++)
+		{
+			Routines[i]();
+		}
 		//Waiting for the renderer to finish it's current frame
 		{
 			std::lock_guard<std::mutex> lock(RenderMutex);
+		}
+		//Runnning AfterFrame Routines
+		for (unsigned int i = 0; i < AfterFrameRoutines.size(); i++)
+		{
+			AfterFrameRoutines[i]();
 		}
 		//Calcualting deltaTime...
 		DeltaTime = clock.restart().asSeconds();
 		ElapsedTime += DeltaTime;
 		//Signaling for the render to start working
-		//Waiting for the renderer to recieve the signal
-		{
-			std::unique_lock <std::mutex> lock(RenderStartedMutex, std::defer_lock);
-			while (!lock.try_lock())
-			{
-				RenderCV.notify_one();
-			}
-		}
+		RenderCV.notify_one();
 	}
 }
 
 void Engine::Render()
 {
-	SetThreadDescription(GetCurrentThread(), L"Rendering Thread");
 	//Assigns MainWindow to this thread
 	MainWindow->setActive(true);
 	//Creating the lock for RenderMutex
@@ -67,10 +69,7 @@ void Engine::Render()
 	while (!Terminate)
 	{
 		//Getting into sleep state; waiting for the Main thread to finish
-		RenderStartedMutex.lock();
 		RenderCV.wait(lock);
-		//Signaling to the Main thread that Rendering is about to begin
-		RenderStartedMutex.unlock();
 		//Clear the window
 		MainWindow->clear(Color::Black);
 		//Main Rendering loop
@@ -89,18 +88,8 @@ void Engine::Render()
 	MainWindow->close();
 }
 
-void Engine::RoutineManager()
-{
-	//Call all reserved routines
-	for (unsigned int i = 0; i < Routines.size(); i++)
-	{
-		Routines[i]();
-	}
-}
-
 void Engine::LogHelper()
 {
-	SetThreadDescription(GetCurrentThread(), L"Logging Thread");
 	//A Lock for synchronoizing Queue access
 	std::unique_lock<std::mutex> lock(LogMutex, std::defer_lock);
 	while (!Terminate)
@@ -148,12 +137,10 @@ Engine::Engine(void (Engine::**MainPtr)())
 	ElapsedTime = 0;
 	DeltaTime = 0;
 	Terminate = false;
-#pragma region Logging
 	Log("Intializing window : Width = " + std::to_string(SCREEN_WIDTH) + ", Height = " + std::to_string(SCREEN_HEIGHT)
 		+ ", Title = " + TITLE);
-#pragma endregion
 	//Intialization of window
-	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
+	MainWindow = new RenderWindow(VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), TITLE);
 	//Deactivating Window from Main Thread
 	MainWindow->setActive(false);
 	//Launching RenderThread
@@ -162,6 +149,11 @@ Engine::Engine(void (Engine::**MainPtr)())
 	//Assiging pointer to main function so that it can call it later
 	//Note that this is the only way the main function can be called from outside of the class
 	*MainPtr = &Engine::Main;
+}
+
+void Engine::SetTitle(const std::string& title)
+{
+	MainWindow->setTitle(title);
 }
 
 void Engine::Log(std::string s)
@@ -180,11 +172,10 @@ float Engine::GetDeltaTime()
 
 void Engine::RegisterObject(int Layer, Drawable* Object)
 {
-#pragma region Logging
+	//Logging...
 	ss << "Registering object in address " << Object << " into layer " << Layer;
 	Log(ss.str());
 	ss.str("");
-#pragma endregion
 	//Locking RenderMutex to register an object
 	std::lock_guard < std::mutex > l(RenderMutex);
 	//Registering object into specified layer
@@ -193,11 +184,10 @@ void Engine::RegisterObject(int Layer, Drawable* Object)
 
 void Engine::UnRegisterObject(int Layer, Drawable* Object)
 {
-#pragma region Logging
+	//Logging... 
 	ss << "Attempting to remove object " << Object << " from layer " << Layer;
 	Log(ss.str());
 	ss.str("");
-#pragma endregion
 	//Removing the object from the layer in which it resides
 	for (unsigned int i = 0; i < Objects[Layer].size(); i++)
 	{
@@ -213,22 +203,29 @@ void Engine::UnRegisterObject(int Layer, Drawable* Object)
 
 void Engine::RegisterRoutine(void(*routine)())
 {
-#pragma region Logging
+	//Logging....
 	ss << "Registering routine " << routine;
 	Log(ss.str());
 	ss.str("");
-#pragma endregion
 	//Registering routine
 	Routines.push_back(routine);
 }
 
+void Engine::RegisterAfterFrameRoutine(void(*routine)())
+{
+	//Logging....
+	ss << "Registering routine " << routine;
+	Log(ss.str());
+	ss.str("");
+	//Registering routine
+	AfterFrameRoutines.push_back(routine);
+}
+
 void Engine::UnRegisterRoutine(void(*routine)())
 {
-#pragma region Logging
 	ss << "Attempting to find and unregister routine " << routine;
 	Log(ss.str());
 	ss.str("");
-#pragma endregion
 	//Removing the routine from the vector
 	for (unsigned int i = 0; i < Routines.size(); i++)
 	{
@@ -250,11 +247,9 @@ void Engine::RegisterOnClose(void(*func)())
 
 void Engine::UnRegisterOnClose(void(*func)())
 {
-#pragma region Logging
 	ss << "Attempting to find and unregister OnClose func " << func;
 	Log(ss.str());
 	ss.str("");
-#pragma endregion
 	//Removing the routine from the vector
 	for (unsigned int i = 0; i < Close.size(); i++)
 	{
@@ -271,8 +266,7 @@ void Engine::UnRegisterOnClose(void(*func)())
 void Engine::WaitForRenderer()
 {
 	//Waiting for the renderer by locking and unlocking RenderMutex
-	RenderMutex.lock();
-	RenderMutex.unlock();
+	std::lock_guard<std::mutex> lock(RenderMutex);
 }
 
 Engine::~Engine()

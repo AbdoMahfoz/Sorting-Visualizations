@@ -8,7 +8,6 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
-#include <Windows.h>
 #include <string>
 
 #define SCREEN_WIDTH 800
@@ -39,15 +38,18 @@ private:
 	//Array of vectors containing the objects
 	//each vector is a layer, the goal is to separate objects
 	//into various layer drawn atop of each other
-	std::vector < Drawable* > Objects[7];
+	std::vector<Drawable*> Objects[7];
 
 	//A vector for holding all routines
 	//routines are functions that the engine run every frame
-	std::vector < void(*)() > Routines;
+	std::vector<void(*)()> Routines;
+
+	//A vector for holding all routines that run after the frame is done
+	std::vector<void(*)()> AfterFrameRoutines;
 
 	//A vector for holding functions that should be called when the application is about to exit
 	//Usually used for cleaning up
-	std::vector < void(*)() > Close;
+	std::vector<void(*)()> Close;
 
 	//Used internally for synchronoizing Rendering thread with Main thread
 	std::condition_variable RenderCV, LogCV;
@@ -59,7 +61,7 @@ private:
 	std::thread *RenderThread, *LogThread;
 
 	//Log Queue to be processed by LogThread
-	std::queue< std::string > LogQueue;
+	std::queue<std::string> LogQueue;
 
 	//A flag for notifiying the Rendering thread and Logging thread that they need to terminate
 	bool Terminate;
@@ -67,18 +69,17 @@ private:
 	//The rendering function
 	void Render();
 
-	//The functions that manage running routines sequentially
-	void RoutineManager();
-
 	//A Helper function that runs on a separate thread
 	void LogHelper();
-
 public:
 	//Dummy stringstream for logging purpose
 	std::stringstream ss;
 
 	//Default constructor
 	Engine(void (Engine::**MainPtr)());
+
+	//Sets the title of the window
+	void SetTitle(const std::string&);
 
 	//function used for logging
 	void Log(std::string s);
@@ -94,6 +95,10 @@ public:
 
 	//Function for registering routines
 	void RegisterRoutine(void(*routine)());
+
+	//Function for registering routines that runs after the frame is done
+	//Avoid making changes to GameObjects in this routine, it may cause rendering errors
+	void RegisterAfterFrameRoutine(void(*rotuine)());
 
 	//Function for deregistering previosuly registered routine to stop LogicManager from invoking it
 	void UnRegisterRoutine(void(*routine)());

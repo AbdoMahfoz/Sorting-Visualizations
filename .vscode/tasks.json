@@ -1,0 +1,84 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile",
+            "command": "g++",
+            "type": "shell",
+            "windows": {
+                "options": {
+                    "cwd": "${workspaceFolder}\\Objects"
+                },
+                "args": [
+                    "-c",
+                    "-std=c++11",
+                    "-I${workspaceFolder}\\SFML-2.4.2\\include",
+                    "${workspaceFolder}\\LCRI\\*.cpp"
+                ]
+            },
+            "linux": {
+                "options": {
+                    "cwd": "${workspaceFolder}/Objects"
+                },
+                "args": [
+                    "-c",
+                    "-std=c++11",
+                    "${workspaceFolder}/LCRI/*.cpp",
+                ]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+        },
+        {
+            "label": "Link",
+            "command": "g++",
+            "type": "shell",
+            "windows": {
+                "options": {
+                    "cwd": "${workspaceFolder}\\Executables"
+                },
+                "args": [
+                    "-o",
+                    "LCRI.exe",
+                    "-std=c++11",
+                    "${workspaceFolder}\\Objecs\\*.o",
+                    "-L${workspaceFolder}\\SFML-2.4.2\\lib",
+                    "-lpthread",
+                    "-lsfml-graphics",
+                    "-lsfml-system",
+                    "-lsfml-window"
+                ]
+            },
+            "linux": {
+                "options": {
+                    "cwd": "${workspaceFolder}/Executables"
+                },
+                "args": [
+                    "-o",
+                    "LCRI.out",
+                    "-std=c++11",
+                    "${workspaceFolder}/Objects/*.o",
+                    "-lpthread",
+                    "-lsfml-graphics",
+                    "-lsfml-system",
+                    "-lsfml-window"
+                ]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn" : "Compile"            
+        }
+    ]
+}

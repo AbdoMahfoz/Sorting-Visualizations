@@ -1,7 +1,5 @@
 #include "Engine.h"
 
-using namespace sf;
-
 Engine* engine;
 
 void Intialize()

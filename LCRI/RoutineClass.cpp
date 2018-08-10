@@ -1,7 +1,7 @@
 #include "RoutineClass.h"
 
 bool RoutineClass::IsIntialized = false;
-std::vector < RoutineClass* > RoutineClass::Instances;
+std::vector<RoutineClass*> RoutineClass::Instances;
 
 void RoutineClass::CallRoutines()
 {
