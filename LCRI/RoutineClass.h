@@ -10,7 +10,7 @@ private:
 	static bool IsIntialized;
 
 	//A vector that keeps track of all children to call the "Main" function in them later
-	static std::vector < RoutineClass* > Instances;
+	static std::vector<RoutineClass*> Instances;
 
 	//The function that gets registered as a routine only to call all "Main" function within it's childs
 	static void CallRoutines();

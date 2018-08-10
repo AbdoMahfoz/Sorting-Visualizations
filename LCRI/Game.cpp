@@ -1,72 +1,72 @@
 #include "Engine.h"
-#include "RoutineClass.h"
+#include "GameObject.cpp"
 
-RectangleShape s;
-RectangleShape x;
+GameObject<RectangleShape> *gS, *gX;
 bool ReverseX = false, ReverseY = false;
 bool IReverseX = true, IReverseY = true;
 
 void Animate()
 {
-	//Moving objects based on their respective booleans
-	//Each boolean decides the direction in which the object will slide
-	//engine->ss << "Framerate = " << (1.0f / engine->GetDeltaTime());
-	//engine->Log(engine->ss.str());
-	//engine->ss.str("");
-	engine->WaitForRenderer();
-	x.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseX),
+	engine->SetTitle("Framerate = " + std::to_string(1.0f/ engine->GetDeltaTime()));
+	gX->getCoreObject().move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseX),
 		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * IReverseY));
-	s.move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseX),
+	gS->getCoreObject().move(256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseX),
 		256.0f * engine->GetDeltaTime() + (-512.0f * engine->GetDeltaTime() * ReverseY));
-	//A series of if condition to check if our object hit the boarder of the window
-	if (x.getPosition().x >= SCREEN_WIDTH - 50)
+	if (gX->getReadOnlyCoreObject().getPosition().x >= SCREEN_WIDTH - 50)
 	{
 		IReverseX = true;
 	}
-	else if (x.getPosition().x <= 50)
+	else if (gX->getReadOnlyCoreObject().getPosition().x <= 50)
 	{
 		IReverseX = false;
 	}
-	if (x.getPosition().y >= SCREEN_HEIGHT - 50)
+	if (gX->getReadOnlyCoreObject().getPosition().y >= SCREEN_HEIGHT - 50)
 	{
 		IReverseY = true;
 	}
-	else if (x.getPosition().y <= 50)
+	else if (gX->getReadOnlyCoreObject().getPosition().y <= 50)
 	{
 		IReverseY = false;
 	}
-	if (s.getPosition().x >= SCREEN_WIDTH - 50)
+	if (gS->getReadOnlyCoreObject().getPosition().x >= SCREEN_WIDTH - 50)
 	{
 		ReverseX = true;
 	}
-	else if (s.getPosition().x <= 50)
+	else if (gS->getReadOnlyCoreObject().getPosition().x <= 50)
 	{
 		ReverseX = false;
 	}
-	if (s.getPosition().y >= SCREEN_HEIGHT - 50)
+	if (gS->getReadOnlyCoreObject().getPosition().y >= SCREEN_HEIGHT - 50)
 	{
 		ReverseY = true;
 	}
-	else if (s.getPosition().y <= 50)
+	else if (gS->getReadOnlyCoreObject().getPosition().y <= 50)
 	{
 		ReverseY = false;
 	}
 }
 
+void CleanUpGameObjects()
+{
+	delete gX, gS;
+}
+
 void Start()
 {
+	RectangleShape s, x;
 	//Setting values for rectangle s
 	s.setFillColor(Color::Green);
 	s.setPosition(150, 150);
 	s.setSize(Vector2f(100, 100));
 	s.setOrigin(Vector2f(50, 50));
+	gS = new GameObject<RectangleShape>(0, s);
 	//Setting values for rectangle x
 	x.setFillColor(Color::Magenta);
 	x.setPosition(500, 150);
 	x.setSize(Vector2f(100, 100));
 	x.setOrigin(Vector2f(50, 50));
-	//Registering objects and Animation routine
-	engine->RegisterObject(0, &s);
+	gX = new GameObject<RectangleShape>(0, x);
+	//Registering Animation routine and OnClose
 	engine->RegisterRoutine(Animate);
-	engine->RegisterObject(0, &x);
+	engine->RegisterOnClose(CleanUpGameObjects);
 }
