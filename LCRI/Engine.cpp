@@ -140,7 +140,7 @@ Engine::Engine(void (Engine::**MainPtr)())
 	Log("Intializing window : Width = " + std::to_string(SCREEN_WIDTH) + ", Height = " + std::to_string(SCREEN_HEIGHT)
 		+ ", Title = " + TITLE);
 	//Intialization of window
-	MainWindow = new RenderWindow(VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), TITLE);
+	MainWindow = new RenderWindow(VideoMode::getDesktopMode(), TITLE, Style::Fullscreen);
 	//Deactivating Window from Main Thread
 	MainWindow->setActive(false);
 	//Launching RenderThread
@@ -265,6 +265,7 @@ void Engine::UnRegisterOnClose(void(*func)())
 
 void Engine::WaitForRenderer()
 {
+	Log("[Error]Something waited for the renderer");
 	//Waiting for the renderer by locking and unlocking RenderMutex
 	std::lock_guard<std::mutex> lock(RenderMutex);
 }

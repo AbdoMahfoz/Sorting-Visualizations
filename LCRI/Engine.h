@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <Windows.h>
 #include <vector>
 #include <iostream>
 #include <sstream>

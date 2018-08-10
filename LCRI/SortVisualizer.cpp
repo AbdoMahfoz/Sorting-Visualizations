@@ -24,8 +24,7 @@ SortVisualizer::SortVisualizer(int Size, int Width, int Height, int xoffset, int
 	Max = Size;
 	Min = -1;
 	RectWidth = (float)Width / Size;
-	RectBatch = new VertexArray(Quads, 4 * Size);
-	engine->RegisterObject(0, RectBatch);
+	RectBatch = new GameObject<VertexArray>(0, VertexArray(Quads, 4 * Size));
 }
 
 void SortVisualizer::Colorize(ColorDescription cd)
@@ -77,19 +76,18 @@ void SortVisualizer::UpdateRectangle(int i, Color c)
 	SuperRect.setSize(Vector2f(RectWidth, x * Height * -1));
 	SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
 	Vector2f Position = SuperRect.getPosition();
-	RectBatch->operator[](k).position = SuperRect.getPoint(0) + Position;
-	RectBatch->operator[](k + 1).position = SuperRect.getPoint(1) + Position;
-	RectBatch->operator[](k + 2).position = SuperRect.getPoint(2) + Position;
-	RectBatch->operator[](k + 3).position = SuperRect.getPoint(3) + Position;
-	RectBatch->operator[](k).color = c;
-	RectBatch->operator[](k + 1).color = c;
-	RectBatch->operator[](k + 2).color = c;
-	RectBatch->operator[](k + 3).color = c;
+	RectBatch->getCoreObject()[k].position = SuperRect.getPoint(0) + Position;
+	RectBatch->getCoreObject()[k + 1].position = SuperRect.getPoint(1) + Position;
+	RectBatch->getCoreObject()[k + 2].position = SuperRect.getPoint(2) + Position;
+	RectBatch->getCoreObject()[k + 3].position = SuperRect.getPoint(3) + Position;
+	RectBatch->getCoreObject()[k].color = c;
+	RectBatch->getCoreObject()[k + 1].color = c;
+	RectBatch->getCoreObject()[k + 2].color = c;
+	RectBatch->getCoreObject()[k + 3].color = c;
 }
 
 void SortVisualizer::UpdateArray()
 {
-	engine->WaitForRenderer();
 	if (!InProgress)
 	{
 		TempColorBuffer.clear();

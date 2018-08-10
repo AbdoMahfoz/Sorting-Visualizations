@@ -4,8 +4,9 @@
 Font f;
 Text t;
 float ElapsedTime = 0;
-int Size = 100;
-int ms = 5, *Arr[5];
+int Size = 100000;
+const int AlgoCount = 1;
+int ms = 5, *Arr[AlgoCount];
 bool InProgress = false;
 std::vector < SortVisualizer* > Sorts;
 
@@ -22,7 +23,7 @@ void SfDrawText()
 void Randomize()
 {
 	std::random_shuffle(Arr[0], Arr[0] + Size);
-	for (int i = 1; i < 5; i++)
+	for (int i = 1; i < AlgoCount; i++)
 	{
 		for (int j = 0; j < Size; j++)
 		{
@@ -123,7 +124,7 @@ void OnClose()
 		Sorts[i]->StopSort();
 		delete Sorts[i];
 	}
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < AlgoCount; i++)
 	{
 		delete[] Arr[i];
 	}
@@ -136,7 +137,7 @@ void Start()
 	t.setPosition(Vector2f(0.0f, 0.0f));
 	t.setCharacterSize(15);
 	t.setFillColor(Color::Green);
-	for (int j = 0; j < 5; j++)
+	for (int j = 0; j < AlgoCount; j++)
 	{
 		Arr[j] = new int[Size];
 		for (int i = 0; i < Size; i++)
@@ -145,11 +146,14 @@ void Start()
 		}
 	}
 	int width = VideoMode::getDesktopMode().width, height = VideoMode::getDesktopMode().height;
+	Sorts.push_back(new MergeSort(Size, width, height, 0, 0, &ms, Arr[0]));
+	/*
 	Sorts.push_back(new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));
 	Sorts.push_back(new InsertionSort(Size, (width / 3) - 20, height / 2, width / 3, 0, &ms, Arr[1]));
 	Sorts.push_back(new BubbleSort(Size, (width / 3) - 20, height / 2, 2 * width / 3, 0, &ms, Arr[2]));
 	Sorts.push_back(new MergeSort(Size, (width / 2) - 20, height / 2, 0, height / 2, &ms, Arr[3]));
 	Sorts.push_back(new QuickSort(Size, (width / 2) - 20, height / 2, width / 2, height / 2, &ms, Arr[4]));
+	*/
 	Randomize();
 	engine->RegisterObject(1, &t);
 	engine->RegisterRoutine(SfDrawText);
