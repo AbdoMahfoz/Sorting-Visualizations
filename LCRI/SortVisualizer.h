@@ -14,7 +14,6 @@ protected:
 	int Size, Height, Width, xoffset, yoffset, Min, Max, *Arr, *ms;
 	float RectWidth;
 	RectangleShape SuperRect;
-	//VertexArray *RectBatch;
 	GameObject<VertexArray>* RectBatch;
 	std::thread *SortingThread;
 	std::vector < ColorDescription > TempColorBuffer;

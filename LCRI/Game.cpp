@@ -6,7 +6,7 @@ Text t;
 float ElapsedTime = 0;
 int Size = 100000;
 const int AlgoCount = 1;
-int ms = 5, *Arr[AlgoCount];
+int ms = 0, *Arr[AlgoCount];
 bool InProgress = false;
 std::vector < SortVisualizer* > Sorts;
 
@@ -35,14 +35,21 @@ void Randomize()
 void Update()
 {
 	bool flag = false;
+	std::thread** threadPool = new std::thread*[Sorts.size()];
 	for (unsigned int i = 0; i < Sorts.size(); i++)
 	{
-		Sorts[i]->UpdateArray();
+		threadPool[i] = new std::thread(&SortVisualizer::UpdateArray, Sorts[i]);
 		if (Sorts[i]->IsInProgress())
 		{
 			flag = true;
 		}
 	}
+	for (unsigned int i = 0; i < Sorts.size(); i++)
+	{
+		threadPool[i]->join();
+		delete threadPool[i];
+	}
+	delete threadPool;
 	if (!flag || !InProgress)
 	{
 		InProgress = false;
@@ -147,6 +154,7 @@ void Start()
 	}
 	int width = VideoMode::getDesktopMode().width, height = VideoMode::getDesktopMode().height;
 	Sorts.push_back(new MergeSort(Size, width, height, 0, 0, &ms, Arr[0]));
+	//Sorts.push_back(new QuickSort(Size, width, height / 2, 0, height / 2, &ms, Arr[1]));
 	/*
 	Sorts.push_back(new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));
 	Sorts.push_back(new InsertionSort(Size, (width / 3) - 20, height / 2, width / 3, 0, &ms, Arr[1]));
