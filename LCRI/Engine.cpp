@@ -45,10 +45,17 @@ void Engine::Main()
 			std::lock_guard<std::mutex> lock(RenderMutex);
 		}
 		//Runnning AfterFrame Routines
+		std::thread** threadPool = new std::thread*[AfterFrameRoutines.size()];
 		for (unsigned int i = 0; i < AfterFrameRoutines.size(); i++)
 		{
-			AfterFrameRoutines[i]();
+			threadPool[i] = new std::thread(AfterFrameRoutines[i]);
 		}
+		for (unsigned int i = 0; i < AfterFrameRoutines.size(); i++)
+		{
+			threadPool[i]->join();
+			delete threadPool[i];
+		}
+		delete threadPool;
 		//Calcualting deltaTime...
 		DeltaTime = clock.restart().asSeconds();
 		ElapsedTime += DeltaTime;
