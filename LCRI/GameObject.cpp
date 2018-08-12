@@ -3,6 +3,8 @@
 template<class T>
 bool GameObject<T>::terminate = false;
 template<class T>
+bool GameObject<T>::startedWorking = false;
+template<class T>
 int GameObject<T>::listIdentifer = -1;
 template<class T>
 std::mutex GameObject<T>::listIdentifierMutex;
@@ -27,6 +29,7 @@ void GameObject<T>::workerThread(int i)
 	{
 		//Waiting for the logic thread to signal to us that we have some work to do
 		cv.wait(lock);
+		startedWorking[i] = true;
 		do
 		{
 			{
@@ -68,6 +71,7 @@ void GameObject<T>::cleanUp()
 	//Clear the arrays
 	delete[] workerThreads;
 	delete[] workerThreadsMutex;
+	delete[] startedWorking;
 }
 
 template<class T>
@@ -78,13 +82,32 @@ void GameObject<T>::update()
 	//Wake up all worker threads
 	cv.notify_all();
 	//Try to acquire all of their mutecies to know if they are done or not...
-	//We do it twice incase we accidently locked one of the threads before it starts working
-	for (int j = 0; j < 2; j++)
+	//notDoneYet flag is used to make sure that all threads responded to our call and done a full loop before returning to main thread
+	bool notDoneYet = true;
+	while (notDoneYet)
 	{
+		notDoneYet = false;
 		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
 		{
-			std::lock_guard<std::mutex> ll(workerThreadsMutex[i]);
+			if (!startedWorking[i])
+			{
+				//if a thread hasnt startedWorking yet, this means we have got here before it manages
+				//to pick up the condition variable call, so we are going to revisit it later
+				notDoneYet = true;
+			}
+			else
+			{
+				//if a thread startedWorking, we gonna try to lock its mutex
+				//if it is still working we gonna just wait for it to be done
+				//if it is not we gonna quickly lock then unlock it
+				std::lock_guard<std::mutex> ll(workerThreadsMutex[i]);
+			}
 		}
+	}
+	//reset the startWorking array to false
+	for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
+	{
+		startedWorking[i] = false;
 	}
 	updateList.clear();
 }
@@ -101,8 +124,10 @@ GameObject<T>::GameObject(int layer)
 		workerThreads = new std::thread*[std::thread::hardware_concurrency()];
 		//Creating mutecies for the workerThreads based on current hardware
 		workerThreadsMutex = new std::mutex[std::thread::hardware_concurrency()];
+		startedWorking = new bool[std::thread::hardware_concurrency()];
 		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
 		{
+			startedWorking[i] = false;
 			//Creating each workerThread and assigning them a unique number for their mutex
 			workerThreads[i] = new std::thread(workerThread, i);
 		}
@@ -130,8 +155,10 @@ GameObject<T>::GameObject(int layer, const T& o)
 		workerThreads = new std::thread*[std::thread::hardware_concurrency()];
 		//Creating mutecies for the workerThreads based on current hardware
 		workerThreadsMutex = new std::mutex[std::thread::hardware_concurrency()];
+		startedWorking = new bool[std::thread::hardware_concurrency()];
 		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
 		{
+			startedWorking[i] = false;
 			//Creating each workerThread and assigning them a unique number for their mutex
 			workerThreads[i] = new std::thread(workerThread, i);
 		}
