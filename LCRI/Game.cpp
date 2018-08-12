@@ -49,7 +49,7 @@ void Update()
 		threadPool[i]->join();
 		delete threadPool[i];
 	}
-	delete threadPool;
+	delete[] threadPool;
 	if (!flag || !InProgress)
 	{
 		InProgress = false;
