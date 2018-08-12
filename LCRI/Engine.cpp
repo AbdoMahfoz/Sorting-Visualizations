@@ -7,7 +7,8 @@ void Engine::Main()
 	//Main Loop
 	int n = 0;
 	//Start clock from here
-	clock.restart();
+	Clock logicClock, afterFrameClock, frameClock;
+	frameClock.restart();
 	while (MainWindow->isOpen())
 	{
 		//Handling Events...
@@ -36,15 +37,18 @@ void Engine::Main()
 			}
 		}
 		//Call all reserved routines
+		logicClock.restart();
 		for (unsigned int i = 0; i < Routines.size(); i++)
 		{
 			Routines[i]();
 		}
+		logicDeltaTime = logicClock.restart().asSeconds();
 		//Waiting for the renderer to finish it's current frame
 		{
 			std::lock_guard<std::mutex> lock(RenderMutex);
 		}
 		//Runnning AfterFrame Routines
+		afterFrameClock.restart();
 		std::thread** threadPool = new std::thread*[AfterFrameRoutines.size()];
 		for (unsigned int i = 0; i < AfterFrameRoutines.size(); i++)
 		{
@@ -56,11 +60,15 @@ void Engine::Main()
 			delete threadPool[i];
 		}
 		delete[] threadPool;
+		afterFrameTime = afterFrameClock.restart().asSeconds();
 		//Calcualting deltaTime...
-		DeltaTime = clock.restart().asSeconds();
+		DeltaTime = frameClock.restart().asSeconds();
 		ElapsedTime += DeltaTime;
 		//Signaling for the render to start working
-		RenderCV.notify_one();
+		while (!isRendering)
+		{
+			RenderCV.notify_all();
+		}
 	}
 }
 
@@ -73,10 +81,14 @@ void Engine::Render()
 	//Activating Vsync
 	Log("Enabling Vsync");
 	MainWindow->setVerticalSyncEnabled(true);
+	Clock renderClock;
 	while (!Terminate)
 	{
 		//Getting into sleep state; waiting for the Main thread to finish
+		isRendering = false;
 		RenderCV.wait(lock);
+		isRendering = true;
+		renderClock.restart();
 		//Clear the window
 		MainWindow->clear(Color::Black);
 		//Main Rendering loop
@@ -90,6 +102,7 @@ void Engine::Render()
 		}
 		//Display the drawn contents;
 		MainWindow->display();
+		renderDeltaTime = renderClock.restart().asSeconds();
 	}
 	//Closing Window
 	MainWindow->close();
@@ -175,6 +188,21 @@ void Engine::Log(std::string s)
 float Engine::GetDeltaTime()
 {
 	return DeltaTime;
+}
+
+float Engine::GetLogicTime()
+{
+	return logicDeltaTime;
+}
+
+float Engine::GetRenderTime()
+{
+	return renderDeltaTime;
+}
+
+float Engine::GetAfterFrameTime()
+{
+	return afterFrameTime;
 }
 
 void Engine::RegisterObject(int Layer, Drawable* Object)
