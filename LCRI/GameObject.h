@@ -7,7 +7,7 @@ class GameObject
 {
 private:
 	//A boolean for workerThreads to know when should they terminate
-	static bool terminate;
+	static bool terminate, *startedWorking;
 
 	//Pointer to an array of pointers pointing to workerThreads
 	static std::thread** workerThreads;
