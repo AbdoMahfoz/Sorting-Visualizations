@@ -41,7 +41,7 @@ void Update()
 		threadPool[i] = new std::thread(&SortVisualizer::UpdateArray, Sorts[i]);
 		if (Sorts[i]->IsInProgress())
 		{
-			flag = true;
+			flag = true;			
 		}
 	}
 	for (unsigned int i = 0; i < Sorts.size(); i++)
@@ -153,7 +153,7 @@ void Start()
 		}
 	}
 	int width = VideoMode::getDesktopMode().width, height = VideoMode::getDesktopMode().height;
-	Sorts.push_back(new MergeSort(Size, width, height, 0, 0, &ms, Arr[0]));
+	Sorts.push_back(new QuickSort(Size, width, height, 0, 0, &ms, Arr[0]));
 	//Sorts.push_back(new QuickSort(Size, width, height / 2, 0, height / 2, &ms, Arr[1]));
 	/*
 	Sorts.push_back(new SelectionSort(Size, (width / 3) - 20, height / 2, 0, 0, &ms, Arr[0]));

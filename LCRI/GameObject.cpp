@@ -79,7 +79,7 @@ void GameObject<T>::update()
 	cv.notify_all();
 	//Try to acquire all of their mutecies to know if they are done or not...
 	//We do it twice incase we accidently locked one of the threads before it starts working
-	for (int i = 0; i < 2; i++)
+	for (int j = 0; j < 2; j++)
 	{
 		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
 		{

@@ -73,7 +73,10 @@ void SortVisualizer::UpdateRectangle(int i, Color c)
 {
 	float x = (float)(Arr[i] - Min) / (Max - Min);
 	int k = i * 4;
-	SuperRect.setSize(Vector2f(RectWidth, x * Height * -1));
+	if (SuperRect.getSize().y != x * Height * -1)
+	{
+		SuperRect.setSize(Vector2f(RectWidth, x * Height * -1));
+	}
 	SuperRect.setPosition(Vector2f((RectWidth * i) + xoffset, (float)Height + yoffset));
 	Vector2f Position = SuperRect.getPosition();
 	RectBatch->getCoreObject()[k].position = SuperRect.getPoint(0) + Position;
