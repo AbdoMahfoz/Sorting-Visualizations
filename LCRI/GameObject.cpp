@@ -3,7 +3,7 @@
 template<class T>
 bool GameObject<T>::terminate = false;
 template<class T>
-bool GameObject<T>::startedWorking = false;
+bool* GameObject<T>::startedWorking = false;
 template<class T>
 int GameObject<T>::listIdentifer = -1;
 template<class T>
