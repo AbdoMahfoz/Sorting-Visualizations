@@ -1,32 +1,113 @@
 #include "GameObject.h"
-#include "Engine.h"
 
+template<class T>
+bool GameObject<T>::terminate = false;
+template<class T>
+int GameObject<T>::listIdentifer = -1;
+template<class T>
+std::mutex GameObject<T>::listIdentifierMutex;
+template<class T>
+std::mutex* GameObject<T>::workerThreadsMutex = nullptr;
+template<class T>
+std::condition_variable GameObject<T>::cv;
+template<class T>
+std::thread** GameObject<T>::workerThreads = nullptr;
 template<class T>
 std::vector<GameObject<T>*> GameObject<T>::updateList;
 template<class T>
 bool GameObject<T>::isRegistered = false;
 
 template<class T>
+void GameObject<T>::workerThread(int i)
+{
+	//Acquring our thread mutex
+	std::unique_lock<std::mutex> lock(workerThreadsMutex[i]);
+	int myNum;
+	while (!terminate)
+	{
+		//Waiting for the logic thread to signal to us that we have some work to do
+		cv.wait(lock);
+		do
+		{
+			{
+				//Acquring the index to work on
+				//This process is syncrhonized using the listIdentiferMutex
+				std::lock_guard<std::mutex> ll(listIdentifierMutex);
+				myNum = listIdentifer;
+				//If list identitfer is bigger than or equal 0, it means we actually got something, so we decrement it for the next thread
+				//If not, it means there is nothing for us to do so we just move on
+				if (listIdentifer >= 0)
+				{
+					listIdentifer--;
+				}
+			}
+			//If we have acquried an actual index, we start working...
+			if (myNum >= 0)
+			{
+				//Copy the data from the logic instace to the rendering instance..
+				updateList[myNum]->buffered[1] = updateList[myNum]->buffered[0];
+				//..then mark this instance as no longer in the updateList
+				updateList[myNum]->isInUpdateList = false;
+			}
+		} while (myNum >= 0);
+	}
+}
+
+template<class T>
+void GameObject<T>::cleanUp()
+{
+	//Wake all threads and tell them we are done here
+	terminate = true;
+	cv.notify_all();
+	for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
+	{
+		//Delete them one by one
+		workerThreads[i]->join();
+		delete workerThreads[i];
+	}
+	//Clear the arrays
+	delete[] workerThreads;
+	delete[] workerThreadsMutex;
+}
+
+template<class T>
 void GameObject<T>::update()
 {
-	//Iterate through the updateList
-	for (GameObject<T>* o : updateList)
+	//Set the listIdentifer to the last index of the updateList
+	listIdentifer = updateList.size() - 1;
+	//Wake up all worker threads
+	cv.notify_all();
+	//Try to acquire all of their mutecies to know if they are done or not...
+	//We do it twice incase we accidently locked one of the threads before it starts working
+	for (int i = 0; i < 2; i++)
 	{
-		//Copy the date of the logic drawable to the rendering drawable
-		o->buffered[1] = o->buffered[0];
-		//Mark it as no longer in the updateList
-		o->isInUpdateList = false;
+		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
+		{
+			std::lock_guard<std::mutex> ll(workerThreadsMutex[i]);
+		}
 	}
-	//Now that everything in the updateList is updated, clear it
 	updateList.clear();
 }
 
 template<class T>
 GameObject<T>::GameObject(int layer)
 {
-	//Check if the static update function of this template instance is registered in the AfterFrame routine list
+	//Checking if this template instance is set up
 	if (!isRegistered)
 	{
+		//Logging the amount of working threads we decided to make based on the current hardware concurrency
+		engine->Log("Creating " + std::to_string(std::thread::hardware_concurrency()) + " worker threads for template " + typeid(T).name());
+		//Creating worker thread array based on the current hardware
+		workerThreads = new std::thread*[std::thread::hardware_concurrency()];
+		//Creating mutecies for the workerThreads based on current hardware
+		workerThreadsMutex = new std::mutex[std::thread::hardware_concurrency()];
+		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
+		{
+			//Creating each workerThread and assigning them a unique number for their mutex
+			workerThreads[i] = new std::thread(workerThread, i);
+		}
+		//Registering...
+		engine->RegisterOnClose(cleanUp);
 		engine->RegisterAfterFrameRoutine(update);
 		isRegistered = true;
 	}
@@ -40,9 +121,22 @@ GameObject<T>::GameObject(int layer)
 template<class T>
 GameObject<T>::GameObject(int layer, const T& o)
 {
-	//Check if the static update function of this template instance is registered in the AfterFrame routine list
+	//Checking if this template instance is set up
 	if (!isRegistered)
 	{
+		//Logging the amount of working threads we decided to make based on the current hardware concurrency
+		engine->Log("Creating " + std::to_string(std::thread::hardware_concurrency()) + " worker threads for template " + typeid(T).name());
+		//Creating worker thread array based on the current hardware
+		workerThreads = new std::thread*[std::thread::hardware_concurrency()];
+		//Creating mutecies for the workerThreads based on current hardware
+		workerThreadsMutex = new std::mutex[std::thread::hardware_concurrency()];
+		for (unsigned int i = 0; i < std::thread::hardware_concurrency(); i++)
+		{
+			//Creating each workerThread and assigning them a unique number for their mutex
+			workerThreads[i] = new std::thread(workerThread, i);
+		}
+		//Registering...
+		engine->RegisterOnClose(cleanUp);
 		engine->RegisterAfterFrameRoutine(update);
 		isRegistered = true;
 	}
