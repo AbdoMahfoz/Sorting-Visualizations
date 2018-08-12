@@ -55,7 +55,7 @@ void Engine::Main()
 			threadPool[i]->join();
 			delete threadPool[i];
 		}
-		delete threadPool;
+		delete[] threadPool;
 		//Calcualting deltaTime...
 		DeltaTime = clock.restart().asSeconds();
 		ElapsedTime += DeltaTime;

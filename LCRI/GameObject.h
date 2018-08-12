@@ -1,5 +1,4 @@
-#pragma once
-#include <vector>
+#include "Engine.h"
 
 //Template class that encaspulates any Drawable object
 //Allows user to alter the Drawable object without waiting for the renderer
@@ -7,6 +6,27 @@ template<class T>
 class GameObject
 {
 private:
+	//A boolean for workerThreads to know when should they terminate
+	static bool terminate;
+
+	//Pointer to an array of pointers pointing to workerThreads
+	static std::thread** workerThreads;
+
+	//Mutex for accessing list identifier and array of mutecies for workerThreads
+	static std::mutex listIdentifierMutex, *workerThreadsMutex; 
+	
+	//Condition variable for workerThreads to sleep on
+	static std::condition_variable cv;
+
+	//Used by the workerThread to know what index in the updateList to work on
+	static int listIdentifer;
+
+	//The workerThread function
+	static void workerThread(int);
+
+	//Cleans up the threading mess when the program is terminating
+	static void cleanUp();
+
 	//Contains GameObject instances that the Drawable of which has been modified
 	static std::vector<GameObject*> updateList;
 
